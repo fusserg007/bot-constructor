@@ -1,0 +1,183 @@
+{
+  "id": "reminder",
+  "name": "Бот-напоминалка",
+  "description": "Персональный помощник для создания напоминаний и управления задачами",
+  "category": "utilities",
+  "isPremium": false,
+  "configuration": {
+    "nodes": [
+      {
+        "id": "trigger_start",
+        "type": "trigger",
+        "position": { "x": 50, "y": 50 },
+        "data": {
+          "triggerType": "command",
+          "command": "/start",
+          "description": "Запуск бота-напоминалки"
+        },
+        "connections": ["action_reminder_menu"]
+      },
+      {
+        "id": "action_reminder_menu",
+        "type": "action",
+        "position": { "x": 250, "y": 50 },
+        "data": {
+          "actionType": "send_message",
+          "message": "⏰ Персональный помощник\n\nВыберите действие:",
+          "keyboard": [
+            [{"text": "➕ Создать напоминание"}],
+            [{"text": "📋 Мои напоминания"}],
+            [{"text": "✅ Выполненные задачи"}],
+            [{"text": "⚙️ Настройки"}]
+          ]
+        },
+        "connections": []
+      },
+      {
+        "id": "trigger_create_reminder",
+        "type": "trigger",
+        "position": { "x": 50, "y": 150 },
+        "data": {
+          "triggerType": "message",
+          "filters": ["➕ Создать напоминание"],
+          "description": "Создание нового напоминания"
+        },
+        "connections": ["action_reminder_form"]
+      },
+      {
+        "id": "action_reminder_form",
+        "type": "action",
+        "position": { "x": 250, "y": 150 },
+        "data": {
+          "actionType": "send_message",
+          "message": "➕ Создание напоминания\n\nВведите текст напоминания:",
+          "keyboard": [
+            [{"text": "🔙 Отмена"}]
+          ]
+        },
+        "connections": ["action_ask_time"]
+      },
+      {
+        "id": "action_ask_time",
+        "type": "action",
+        "position": { "x": 450, "y": 150 },
+        "data": {
+          "actionType": "send_message",
+          "message": "⏰ Когда напомнить?\n\nВыберите время:",
+          "keyboard": [
+            [{"text": "🕐 Через час"}, {"text": "🌅 Завтра утром"}],
+            [{"text": "📅 Выбрать дату"}, {"text": "🔄 Повторяющееся"}],
+            [{"text": "🔙 Назад"}]
+          ]
+        },
+        "connections": ["action_save_reminder"]
+      },
+      {
+        "id": "action_save_reminder",
+        "type": "action",
+        "position": { "x": 650, "y": 150 },
+        "data": {
+          "actionType": "save_data",
+          "dataType": "reminder",
+          "fields": ["user_id", "text", "datetime", "repeat", "status"],
+          "scheduleNotification": true
+        },
+        "connections": ["action_reminder_created"]
+      },
+      {
+        "id": "action_reminder_created",
+        "type": "action",
+        "position": { "x": 850, "y": 150 },
+        "data": {
+          "actionType": "send_message",
+          "message": "✅ Напоминание создано!\n\n📝 {reminder_text}\n⏰ {reminder_time}\n\nЯ напомню вам в указанное время.",
+          "keyboard": [
+            [{"text": "➕ Создать еще"}, {"text": "📋 Все напоминания"}],
+            [{"text": "🔙 Главное меню"}]
+          ]
+        },
+        "connections": []
+      },
+      {
+        "id": "trigger_my_reminders",
+        "type": "trigger",
+        "position": { "x": 50, "y": 250 },
+        "data": {
+          "triggerType": "message",
+          "filters": ["📋 Мои напоминания"],
+          "description": "Просмотр активных напоминаний"
+        },
+        "connections": ["action_show_reminders"]
+      },
+      {
+        "id": "action_show_reminders",
+        "type": "action",
+        "position": { "x": 250, "y": 250 },
+        "data": {
+          "actionType": "send_message",
+          "message": "📋 Ваши активные напоминания:\n\n{reminders_list}",
+          "keyboard": [
+            [{"text": "❌ Удалить напоминание"}],
+            [{"text": "✏️ Редактировать"}],
+            [{"text": "🔙 Главное меню"}]
+          ]
+        },
+        "connections": []
+      },
+      {
+        "id": "trigger_notification",
+        "type": "trigger",
+        "position": { "x": 50, "y": 350 },
+        "data": {
+          "triggerType": "scheduled",
+          "description": "Отправка напоминания по расписанию"
+        },
+        "connections": ["action_send_notification"]
+      },
+      {
+        "id": "action_send_notification",
+        "type": "action",
+        "position": { "x": 250, "y": 350 },
+        "data": {
+          "actionType": "send_message",
+          "message": "⏰ Напоминание!\n\n📝 {reminder_text}\n\nВыполнили задачу?",
+          "keyboard": [
+            [{"text": "✅ Выполнено"}, {"text": "⏰ Напомнить позже"}],
+            [{"text": "❌ Отменить напоминание"}]
+          ]
+        },
+        "connections": []
+      }
+    ],
+    "defaultSettings": {
+      "timezone": "Europe/Moscow",
+      "defaultSnooze": 30,
+      "maxReminders": 50,
+      "reminderTypes": ["одноразовое", "ежедневно", "еженедельно", "ежемесячно"],
+      "notificationSound": true,
+      "quietHours": {
+        "start": "22:00",
+        "end": "08:00"
+      }
+    }
+  },
+  "preview": {
+    "screenshots": ["reminder_preview.png"],
+    "demoBot": "@demo_reminder_bot",
+    "features": [
+      "Персональные напоминания",
+      "Повторяющиеся задачи",
+      "Гибкое планирование",
+      "Управление задачами"
+    ]
+  },
+  "usage": {
+    "installs": 0,
+    "rating": 0
+  },
+  "createdAt": "2024-01-01T00:00:00Z",
+  "_meta": {
+    "lastModified": "2024-01-01T00:00:00Z",
+    "version": 1
+  }
+}

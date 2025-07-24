@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Basic Test</title>
+</head>
+<body>
+    <h1>Basic Test</h1>
+    <div id="status">Проверяем...</div>
+    <button id="testBtn">Тест</button>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM loaded');
+            document.getElementById('status').innerHTML = 'DOM загружен';
+            
+            document.getElementById('testBtn').addEventListener('click', function() {
+                document.getElementById('status').innerHTML = 'Кнопка работает!';
+            });
+            
+            // Тест API
+            fetch('/api/bots')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('status').innerHTML = 'API работает, ботов: ' + data.data.bots.length;
+                })
+                .catch(error => {
+                    document.getElementById('status').innerHTML = 'API ошибка: ' + error.message;
+                });
+        });
+    </script>
+</body>
+</html>

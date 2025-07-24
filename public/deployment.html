@@ -1,0 +1,870 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Развертывание ботов - Bot Constructor</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .deployment-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .deployment-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .bot-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .bot-card:hover {
+            transform: translateY(-2px);
+        }
+
+        .bot-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .bot-info h3 {
+            margin: 0 0 5px 0;
+            color: #333;
+            font-size: 20px;
+        }
+
+        .bot-info p {
+            margin: 0;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .bot-status {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .status-active {
+            background: #28a745;
+            box-shadow: 0 0 10px rgba(40, 167, 69, 0.5);
+        }
+
+        .status-paused {
+            background: #ffc107;
+        }
+
+        .status-draft {
+            background: #6c757d;
+        }
+
+        .status-error {
+            background: #dc3545;
+        }
+
+        .bot-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .detail-item {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+        }
+
+        .detail-label {
+            font-size: 12px;
+            color: #666;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+
+        .detail-value {
+            font-size: 16px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .bot-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: #007bff;
+            color: white;
+        }
+
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-warning {
+            background: #ffc107;
+            color: #212529;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            opacity: 0.9;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .token-form {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #007bff;
+            box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+        }
+
+        .webhook-info {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 15px;
+        }
+
+        .webhook-info h4 {
+            margin: 0 0 10px 0;
+            color: #155724;
+        }
+
+        .webhook-url {
+            font-family: monospace;
+            background: #f8f9fa;
+            padding: 8px;
+            border-radius: 5px;
+            word-break: break-all;
+        }
+
+        .instructions {
+            background: #e7f3ff;
+            border: 1px solid #b8daff;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .instructions h4 {
+            margin: 0 0 15px 0;
+            color: #004085;
+        }
+
+        .instructions ol {
+            margin: 0;
+            padding-left: 20px;
+        }
+
+        .instructions li {
+            margin-bottom: 8px;
+            line-height: 1.5;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+
+        .success {
+            background: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 30px;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close:hover {
+            color: black;
+        }
+
+        .export-content {
+            margin-top: 20px;
+        }
+
+        .export-content textarea {
+            width: 100%;
+            height: 200px;
+            font-family: monospace;
+            font-size: 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <nav class="navbar">
+            <div class="nav-brand">
+                <h1>🤖 Bot Constructor</h1>
+            </div>
+            <div class="nav-menu">
+                <a href="index.html">Главная</a>
+                <a href="stats.html">Статистика</a>
+                <a href="subscription.html">Подписки</a>
+                <a href="deployment.html" class="active">Развертывание</a>
+                <a href="#" onclick="logout()">Выход</a>
+            </div>
+        </nav>
+
+        <div class="deployment-container">
+            <div class="deployment-header">
+                <h2>🚀 Управление развертыванием ботов</h2>
+                <p>Развертывайте, управляйте и мониторьте ваших ботов</p>
+            </div>
+
+            <div id="loading" class="loading">
+                <p>Загрузка ботов...</p>
+            </div>
+
+            <div id="error" class="error" style="display: none;">
+                <p>Ошибка загрузки данных</p>
+            </div>
+
+            <div id="bots-container">
+                <!-- Боты будут загружены динамически -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно для экспорта -->
+    <div id="export-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeExportModal()">&times;</span>
+            <h3>📦 Экспорт конфигурации бота</h3>
+            <div id="export-content" class="export-content">
+                <!-- Содержимое будет загружено динамически -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let bots = [];
+
+        // Проверка авторизации
+        function checkAuth() {
+            const token = localStorage.getItem('authToken');
+            if (!token) {
+                window.location.href = 'index.html';
+                return false;
+            }
+            return true;
+        }
+
+        // Выход из системы
+        function logout() {
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('userData');
+            window.location.href = 'index.html';
+        }
+
+        // Загрузка списка ботов
+        async function loadBots() {
+            try {
+                const token = localStorage.getItem('authToken');
+                const response = await fetch('/api/bots', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Ошибка загрузки ботов');
+                }
+
+                const data = await response.json();
+                bots = data.data.bots || [];
+                
+                // Загружаем статус развертывания для каждого бота
+                for (let bot of bots) {
+                    try {
+                        const statusResponse = await fetch(`/api/deployment/status/${bot.id}`, {
+                            headers: {
+                                'Authorization': `Bearer ${token}`
+                            }
+                        });
+                        
+                        if (statusResponse.ok) {
+                            const statusData = await statusResponse.json();
+                            bot.deploymentStatus = statusData.data;
+                        }
+                    } catch (error) {
+                        console.error(`Error loading status for bot ${bot.id}:`, error);
+                    }
+                }
+
+                displayBots();
+            } catch (error) {
+                console.error('Error loading bots:', error);
+                showError('Ошибка загрузки ботов');
+            }
+        }
+
+        // Отображение ботов
+        function displayBots() {
+            const container = document.getElementById('bots-container');
+            container.innerHTML = '';
+
+            if (bots.length === 0) {
+                container.innerHTML = `
+                    <div class="bot-card">
+                        <p>У вас пока нет ботов. <a href="index.html">Создайте первого бота</a></p>
+                    </div>
+                `;
+                return;
+            }
+
+            bots.forEach(bot => {
+                const botCard = createBotCard(bot);
+                container.appendChild(botCard);
+            });
+
+            hideLoading();
+        }
+
+        // Создание карточки бота
+        function createBotCard(bot) {
+            const card = document.createElement('div');
+            card.className = 'bot-card';
+            
+            const status = bot.deploymentStatus || {};
+            const statusClass = getStatusClass(status.status || bot.status);
+            const statusText = getStatusText(status.status || bot.status);
+
+            card.innerHTML = `
+                <div class="bot-header">
+                    <div class="bot-info">
+                        <h3>${bot.name}</h3>
+                        <p>${bot.description || 'Без описания'}</p>
+                    </div>
+                    <div class="bot-status">
+                        <span class="status-indicator ${statusClass}"></span>
+                        <span>${statusText}</span>
+                    </div>
+                </div>
+
+                <div class="bot-details">
+                    <div class="detail-item">
+                        <div class="detail-label">Токен</div>
+                        <div class="detail-value">${bot.token ? '✅ Настроен' : '❌ Не настроен'}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Webhook</div>
+                        <div class="detail-value">${status.webhookUrl ? '✅ Активен' : '❌ Не настроен'}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Бот в Telegram</div>
+                        <div class="detail-value">${status.botInfo?.username ? '@' + status.botInfo.username : 'Неизвестно'}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Развернут</div>
+                        <div class="detail-value">${status.deployedAt ? new Date(status.deployedAt).toLocaleString() : 'Никогда'}</div>
+                    </div>
+                </div>
+
+                ${!bot.token ? createTokenForm(bot.id) : ''}
+                ${status.webhookUrl ? createWebhookInfo(status.webhookUrl) : ''}
+
+                <div class="bot-actions">
+                    ${createActionButtons(bot, status)}
+                </div>
+            `;
+
+            return card;
+        }
+
+        // Создание формы для ввода токена
+        function createTokenForm(botId) {
+            return `
+                <div class="token-form">
+                    <h4>🔑 Настройка токена бота</h4>
+                    <p>Для развертывания бота необходимо указать токен от @BotFather</p>
+                    <div class="form-group">
+                        <label for="token-${botId}">Токен бота:</label>
+                        <input type="text" id="token-${botId}" placeholder="123456789:ABCdefGHIjklMNOpqrsTUVwxyz" />
+                    </div>
+                    <button class="btn btn-primary" onclick="saveToken('${botId}')">
+                        💾 Сохранить токен
+                    </button>
+                </div>
+            `;
+        }
+
+        // Создание информации о webhook
+        function createWebhookInfo(webhookUrl) {
+            return `
+                <div class="webhook-info">
+                    <h4>🔗 Webhook настроен</h4>
+                    <div class="webhook-url">${webhookUrl}</div>
+                </div>
+            `;
+        }
+
+        // Создание кнопок действий
+        function createActionButtons(bot, status) {
+            const buttons = [];
+
+            if (!bot.token) {
+                return '<p class="text-muted">Сначала настройте токен бота</p>';
+            }
+
+            if (status.status === 'active') {
+                buttons.push(`<button class="btn btn-warning" onclick="stopBot('${bot.id}')">⏸️ Остановить</button>`);
+                buttons.push(`<button class="btn btn-secondary" onclick="restartBot('${bot.id}')">🔄 Перезапустить</button>`);
+            } else {
+                buttons.push(`<button class="btn btn-success" onclick="deployBot('${bot.id}')">🚀 Развернуть</button>`);
+            }
+
+            buttons.push(`<button class="btn btn-primary" onclick="showWebhookInfo('${bot.id}')">ℹ️ Webhook</button>`);
+            buttons.push(`<button class="btn btn-secondary" onclick="exportBot('${bot.id}')">📦 Экспорт</button>`);
+
+            return buttons.join('');
+        }
+
+        // Получение класса статуса
+        function getStatusClass(status) {
+            switch (status) {
+                case 'active': return 'status-active';
+                case 'paused': return 'status-paused';
+                case 'draft': return 'status-draft';
+                default: return 'status-error';
+            }
+        }
+
+        // Получение текста статуса
+        function getStatusText(status) {
+            switch (status) {
+                case 'active': return 'Активен';
+                case 'paused': return 'Остановлен';
+                case 'draft': return 'Черновик';
+                default: return 'Неизвестно';
+            }
+        }
+
+        // Сохранение токена
+        async function saveToken(botId) {
+            const tokenInput = document.getElementById(`token-${botId}`);
+            const token = tokenInput.value.trim();
+
+            if (!token) {
+                alert('Введите токен бота');
+                return;
+            }
+
+            try {
+                // Сначала валидируем токен
+                const authToken = localStorage.getItem('authToken');
+                const validateResponse = await fetch('/api/deployment/validate-token', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({ token })
+                });
+
+                const validateData = await validateResponse.json();
+                
+                if (!validateData.success || !validateData.data.valid) {
+                    alert('Недействительный токен: ' + (validateData.data.error || 'Неизвестная ошибка'));
+                    return;
+                }
+
+                // Сохраняем токен в боте
+                const updateResponse = await fetch(`/api/bots/${botId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({ token })
+                });
+
+                if (updateResponse.ok) {
+                    showSuccess('Токен успешно сохранен!');
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1500);
+                } else {
+                    throw new Error('Ошибка сохранения токена');
+                }
+
+            } catch (error) {
+                console.error('Error saving token:', error);
+                alert('Ошибка сохранения токена');
+            }
+        }
+
+        // Развертывание бота
+        async function deployBot(botId) {
+            if (!confirm('Развернуть бота? Он станет доступен в Telegram.')) {
+                return;
+            }
+
+            try {
+                const token = localStorage.getItem('authToken');
+                const response = await fetch(`/api/deployment/deploy/${botId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showSuccess(data.message);
+                    if (data.data.instructions) {
+                        showInstructions(data.data.instructions);
+                    }
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 3000);
+                } else {
+                    alert('Ошибка развертывания: ' + data.error);
+                }
+            } catch (error) {
+                console.error('Error deploying bot:', error);
+                alert('Ошибка развертывания бота');
+            }
+        }
+
+        // Остановка бота
+        async function stopBot(botId) {
+            if (!confirm('Остановить бота? Он перестанет отвечать на сообщения.')) {
+                return;
+            }
+
+            try {
+                const token = localStorage.getItem('authToken');
+                const response = await fetch(`/api/deployment/stop/${botId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showSuccess(data.message);
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1500);
+                } else {
+                    alert('Ошибка остановки: ' + data.error);
+                }
+            } catch (error) {
+                console.error('Error stopping bot:', error);
+                alert('Ошибка остановки бота');
+            }
+        }
+
+        // Перезапуск бота
+        async function restartBot(botId) {
+            if (!confirm('Перезапустить бота?')) {
+                return;
+            }
+
+            try {
+                const token = localStorage.getItem('authToken');
+                const response = await fetch(`/api/deployment/restart/${botId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showSuccess(data.message);
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 2000);
+                } else {
+                    alert('Ошибка перезапуска: ' + data.error);
+                }
+            } catch (error) {
+                console.error('Error restarting bot:', error);
+                alert('Ошибка перезапуска бота');
+            }
+        }
+
+        // Показать информацию о webhook
+        async function showWebhookInfo(botId) {
+            try {
+                const token = localStorage.getItem('authToken');
+                const response = await fetch(`/api/deployment/webhook-info/${botId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    const info = data.data;
+                    alert(`Webhook информация:\n\nURL: ${info.url}\nПоследнее обновление: ${info.last_error_date ? new Date(info.last_error_date * 1000).toLocaleString() : 'Нет ошибок'}\nОжидающих обновлений: ${info.pending_update_count}`);
+                } else {
+                    alert('Ошибка получения информации: ' + data.error);
+                }
+            } catch (error) {
+                console.error('Error getting webhook info:', error);
+                alert('Ошибка получения информации о webhook');
+            }
+        }
+
+        // Экспорт бота
+        async function exportBot(botId) {
+            try {
+                const token = localStorage.getItem('authToken');
+                const response = await fetch(`/api/deployment/export/${botId}`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showExportModal(data.data);
+                } else {
+                    alert('Ошибка экспорта: ' + data.error);
+                }
+            } catch (error) {
+                console.error('Error exporting bot:', error);
+                alert('Ошибка экспорта конфигурации');
+            }
+        }
+
+        // Показать модальное окно экспорта
+        function showExportModal(exportData) {
+            const modal = document.getElementById('export-modal');
+            const content = document.getElementById('export-content');
+
+            content.innerHTML = `
+                <p>Конфигурация бота готова к экспорту:</p>
+                <div class="form-group">
+                    <label>Конфигурация (JSON):</label>
+                    <textarea readonly>${JSON.stringify(exportData.config, null, 2)}</textarea>
+                </div>
+                <div class="form-group">
+                    <label>Инструкции по развертыванию:</label>
+                    <textarea readonly>${exportData.instructions}</textarea>
+                </div>
+                <button class="btn btn-primary" onclick="downloadExport('${exportData.filename}', '${JSON.stringify(exportData.config)}')">
+                    💾 Скачать конфигурацию
+                </button>
+            `;
+
+            modal.style.display = 'block';
+        }
+
+        // Закрыть модальное окно экспорта
+        function closeExportModal() {
+            document.getElementById('export-modal').style.display = 'none';
+        }
+
+        // Скачать экспорт
+        function downloadExport(filename, configData) {
+            const blob = new Blob([configData], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            closeExportModal();
+        }
+
+        // Показать инструкции
+        function showInstructions(instructions) {
+            const instructionsDiv = document.createElement('div');
+            instructionsDiv.className = 'instructions';
+            instructionsDiv.innerHTML = `
+                <h4>📋 Инструкции по использованию бота</h4>
+                <ol>
+                    ${instructions.map(instruction => `<li>${instruction}</li>`).join('')}
+                </ol>
+            `;
+
+            document.querySelector('.deployment-container').appendChild(instructionsDiv);
+
+            setTimeout(() => {
+                instructionsDiv.remove();
+            }, 10000);
+        }
+
+        // Показать загрузку
+        function showLoading() {
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('error').style.display = 'none';
+        }
+
+        // Скрыть загрузку
+        function hideLoading() {
+            document.getElementById('loading').style.display = 'none';
+        }
+
+        // Показать ошибку
+        function showError(message) {
+            const errorDiv = document.getElementById('error');
+            errorDiv.querySelector('p').textContent = message;
+            errorDiv.style.display = 'block';
+            document.getElementById('loading').style.display = 'none';
+        }
+
+        // Показать успех
+        function showSuccess(message) {
+            const successDiv = document.createElement('div');
+            successDiv.className = 'success';
+            successDiv.innerHTML = `<p>${message}</p>`;
+            
+            document.querySelector('.deployment-container').insertBefore(
+                successDiv, 
+                document.querySelector('.deployment-container').firstChild
+            );
+            
+            setTimeout(() => {
+                successDiv.remove();
+            }, 5000);
+        }
+
+        // Инициализация страницы
+        document.addEventListener('DOMContentLoaded', function() {
+            if (!checkAuth()) return;
+
+            showLoading();
+            loadBots();
+
+            // Закрытие модального окна при клике вне его
+            window.onclick = function(event) {
+                const modal = document.getElementById('export-modal');
+                if (event.target === modal) {
+                    closeExportModal();
+                }
+            }
+        });
+    </script>
+</body>
+</html>

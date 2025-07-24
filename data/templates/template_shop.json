@@ -1,0 +1,115 @@
+{
+  "id": "shop",
+  "name": "Бот-магазин",
+  "description": "Интернет-магазин с каталогом товаров, корзиной и оформлением заказов",
+  "category": "business",
+  "isPremium": false,
+  "configuration": {
+    "nodes": [
+      {
+        "id": "trigger_start",
+        "type": "trigger",
+        "position": { "x": 50, "y": 50 },
+        "data": {
+          "triggerType": "command",
+          "command": "/start",
+          "description": "Команда запуска бота"
+        },
+        "connections": ["action_welcome_shop"]
+      },
+      {
+        "id": "action_welcome_shop",
+        "type": "action",
+        "position": { "x": 250, "y": 50 },
+        "data": {
+          "actionType": "send_message",
+          "message": "🛍️ Добро пожаловать в наш магазин!\n\n📱 Выберите категорию товаров:",
+          "keyboard": [
+            [{"text": "📱 Электроника"}, {"text": "👕 Одежда"}],
+            [{"text": "🏠 Дом и сад"}, {"text": "🛒 Корзина"}],
+            [{"text": "📞 Поддержка"}]
+          ]
+        },
+        "connections": []
+      },
+      {
+        "id": "trigger_category",
+        "type": "trigger",
+        "position": { "x": 50, "y": 150 },
+        "data": {
+          "triggerType": "message",
+          "filters": ["📱 Электроника", "👕 Одежда", "🏠 Дом и сад"],
+          "description": "Выбор категории товаров"
+        },
+        "connections": ["action_show_products"]
+      },
+      {
+        "id": "action_show_products",
+        "type": "action",
+        "position": { "x": 250, "y": 150 },
+        "data": {
+          "actionType": "send_message",
+          "message": "📦 Товары в категории {category}:\n\n🔸 Товар 1 - 1000₽\n🔸 Товар 2 - 1500₽\n🔸 Товар 3 - 2000₽",
+          "keyboard": [
+            [{"text": "➕ Добавить в корзину"}],
+            [{"text": "🔙 Назад к категориям"}]
+          ]
+        },
+        "connections": []
+      },
+      {
+        "id": "trigger_cart",
+        "type": "trigger",
+        "position": { "x": 50, "y": 250 },
+        "data": {
+          "triggerType": "message",
+          "filters": ["🛒 Корзина"],
+          "description": "Просмотр корзины"
+        },
+        "connections": ["action_show_cart"]
+      },
+      {
+        "id": "action_show_cart",
+        "type": "action",
+        "position": { "x": 250, "y": 250 },
+        "data": {
+          "actionType": "send_message",
+          "message": "🛒 Ваша корзина:\n\n{cart_items}\n\n💰 Итого: {total}₽",
+          "keyboard": [
+            [{"text": "✅ Оформить заказ"}],
+            [{"text": "🗑️ Очистить корзину"}],
+            [{"text": "🔙 Продолжить покупки"}]
+          ]
+        },
+        "connections": []
+      }
+    ],
+    "defaultSettings": {
+      "currency": "₽",
+      "paymentMethods": ["card", "cash"],
+      "deliveryOptions": ["pickup", "delivery"],
+      "adminIds": [],
+      "categories": ["Электроника", "Одежда", "Дом и сад"],
+      "supportContact": "@shop_support"
+    }
+  },
+  "preview": {
+    "screenshots": ["shop_preview.png"],
+    "demoBot": "@demo_shop_bot",
+    "features": [
+      "Каталог товаров по категориям",
+      "Корзина покупок",
+      "Оформление заказов",
+      "Поддержка клиентов"
+    ]
+  },
+  "usage": {
+    "installs": 0,
+    "rating": 0
+  },
+  "createdAt": "2024-01-01T00:00:00Z",
+  "_meta": {
+    "lastModified": "2024-01-01T00:00:00Z",
+    "version": 1
+  }
+}

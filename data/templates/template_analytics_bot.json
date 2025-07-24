@@ -1,0 +1,134 @@
+{
+  "id": "analytics_bot",
+  "name": "Аналитический бот",
+  "description": "Продвинутая аналитика группы с детальными отчетами и графиками",
+  "category": "business",
+  "isPremium": true,
+  "configuration": {
+    "nodes": [
+      {
+        "id": "trigger_stats",
+        "type": "trigger",
+        "position": { "x": 50, "y": 50 },
+        "data": {
+          "triggerType": "command",
+          "command": "/stats",
+          "description": "Показать статистику группы"
+        },
+        "connections": ["condition_check_admin"]
+      },
+      {
+        "id": "condition_check_admin",
+        "type": "condition",
+        "position": { "x": 250, "y": 50 },
+        "data": {
+          "conditionType": "user_is_admin",
+          "description": "Проверка прав администратора"
+        },
+        "connections": {
+          "true": ["action_show_stats"],
+          "false": ["action_access_denied"]
+        }
+      },
+      {
+        "id": "action_show_stats",
+        "type": "action",
+        "position": { "x": 450, "y": 50 },
+        "data": {
+          "actionType": "send_message",
+          "message": "📊 Статистика группы за последние 30 дней:\n\n👥 Участников: {member_count}\n📝 Сообщений: {message_count}\n📈 Активность: {activity_rate}%\n🔝 Топ пользователи:\n{top_users}",
+          "keyboard": [
+            ["📈 Детальная статистика", "📊 Графики"],
+            ["📅 За неделю", "📅 За месяц"],
+            ["📤 Экспорт данных"]
+          ]
+        },
+        "connections": []
+      },
+      {
+        "id": "action_access_denied",
+        "type": "action",
+        "position": { "x": 450, "y": 150 },
+        "data": {
+          "actionType": "send_message",
+          "message": "❌ Доступ запрещен. Только администраторы могут просматривать статистику.",
+          "deleteAfter": 10
+        },
+        "connections": []
+      },
+      {
+        "id": "trigger_detailed_stats",
+        "type": "trigger",
+        "position": { "x": 50, "y": 250 },
+        "data": {
+          "triggerType": "message",
+          "filters": ["📈 Детальная статистика"],
+          "description": "Детальная статистика"
+        },
+        "connections": ["action_detailed_report"]
+      },
+      {
+        "id": "action_detailed_report",
+        "type": "action",
+        "position": { "x": 250, "y": 250 },
+        "data": {
+          "actionType": "send_message",
+          "message": "📋 Детальный отчет:\n\n🕐 Пиковые часы: {peak_hours}\n📱 Типы сообщений:\n  • Текст: {text_messages}%\n  • Фото: {photo_messages}%\n  • Видео: {video_messages}%\n  • Стикеры: {sticker_messages}%\n\n👤 Анализ пользователей:\n  • Новые за месяц: {new_users}\n  • Активные: {active_users}\n  • Молчуны: {silent_users}",
+          "parseMode": "HTML"
+        },
+        "connections": []
+      },
+      {
+        "id": "trigger_export",
+        "type": "trigger",
+        "position": { "x": 50, "y": 350 },
+        "data": {
+          "triggerType": "message",
+          "filters": ["📤 Экспорт данных"],
+          "description": "Экспорт данных"
+        },
+        "connections": ["action_export_data"]
+      },
+      {
+        "id": "action_export_data",
+        "type": "action",
+        "position": { "x": 250, "y": 350 },
+        "data": {
+          "actionType": "send_document",
+          "document": "{analytics_csv}",
+          "caption": "📊 Экспорт статистики группы в формате CSV\n\nДанные включают:\n• Активность по дням\n• Статистику пользователей\n• Анализ сообщений"
+        },
+        "connections": []
+      }
+    ],
+    "defaultSettings": {
+      "trackingEnabled": true,
+      "reportPeriod": 30,
+      "exportFormat": "csv",
+      "anonymizeUsers": false,
+      "includeDeleted": false,
+      "chartGeneration": true
+    }
+  },
+  "preview": {
+    "screenshots": ["analytics_bot_preview.png"],
+    "demoBot": "@demo_analytics_bot",
+    "features": [
+      "Детальная статистика группы",
+      "Анализ активности пользователей",
+      "Графики и диаграммы",
+      "Экспорт данных в CSV",
+      "Отчеты по периодам",
+      "Анализ типов сообщений"
+    ]
+  },
+  "usage": {
+    "installs": 0,
+    "rating": 0
+  },
+  "createdAt": "2024-01-01T00:00:00Z",
+  "_meta": {
+    "lastModified": "2024-01-01T00:00:00Z",
+    "version": 1
+  }
+}

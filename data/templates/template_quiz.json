@@ -1,0 +1,166 @@
+{
+  "id": "quiz",
+  "name": "Квиз-бот",
+  "description": "Интерактивные викторины и тесты с подсчетом результатов и рейтингами",
+  "category": "education",
+  "isPremium": false,
+  "configuration": {
+    "nodes": [
+      {
+        "id": "trigger_start",
+        "type": "trigger",
+        "position": { "x": 50, "y": 50 },
+        "data": {
+          "triggerType": "command",
+          "command": "/start",
+          "description": "Запуск квиза"
+        },
+        "connections": ["action_quiz_menu"]
+      },
+      {
+        "id": "action_quiz_menu",
+        "type": "action",
+        "position": { "x": 250, "y": 50 },
+        "data": {
+          "actionType": "send_message",
+          "message": "🧠 Добро пожаловать в квиз!\n\nВыберите тему:",
+          "keyboard": [
+            [{"text": "🌍 География"}, {"text": "📚 История"}],
+            [{"text": "🔬 Наука"}, {"text": "🎬 Кино"}],
+            [{"text": "📊 Мои результаты"}, {"text": "🏆 Рейтинг"}]
+          ]
+        },
+        "connections": []
+      },
+      {
+        "id": "trigger_topic_selected",
+        "type": "trigger",
+        "position": { "x": 50, "y": 150 },
+        "data": {
+          "triggerType": "message",
+          "filters": ["🌍 География", "📚 История", "🔬 Наука", "🎬 Кино"],
+          "description": "Выбор темы квиза"
+        },
+        "connections": ["action_start_quiz"]
+      },
+      {
+        "id": "action_start_quiz",
+        "type": "action",
+        "position": { "x": 250, "y": 150 },
+        "data": {
+          "actionType": "send_message",
+          "message": "🎯 Квиз: {topic}\n\nВопрос 1 из 10:\n\n{question}\n\nВыберите правильный ответ:",
+          "keyboard": [
+            [{"text": "{option_a}"}, {"text": "{option_b}"}],
+            [{"text": "{option_c}"}, {"text": "{option_d}"}]
+          ]
+        },
+        "connections": ["condition_check_answer"]
+      },
+      {
+        "id": "condition_check_answer",
+        "type": "condition",
+        "position": { "x": 450, "y": 150 },
+        "data": {
+          "conditionType": "answer_correct",
+          "description": "Проверка правильности ответа"
+        },
+        "connections": {
+          "true": ["action_correct_answer"],
+          "false": ["action_wrong_answer"]
+        }
+      },
+      {
+        "id": "action_correct_answer",
+        "type": "action",
+        "position": { "x": 650, "y": 100 },
+        "data": {
+          "actionType": "send_message",
+          "message": "✅ Правильно! +1 балл\n\n{explanation}",
+          "keyboard": [
+            [{"text": "➡️ Следующий вопрос"}]
+          ]
+        },
+        "connections": ["action_next_question"]
+      },
+      {
+        "id": "action_wrong_answer",
+        "type": "action",
+        "position": { "x": 650, "y": 200 },
+        "data": {
+          "actionType": "send_message",
+          "message": "❌ Неправильно!\n\nПравильный ответ: {correct_answer}\n\n{explanation}",
+          "keyboard": [
+            [{"text": "➡️ Следующий вопрос"}]
+          ]
+        },
+        "connections": ["action_next_question"]
+      },
+      {
+        "id": "action_next_question",
+        "type": "action",
+        "position": { "x": 850, "y": 150 },
+        "data": {
+          "actionType": "conditional_action",
+          "condition": "questions_remaining",
+          "trueAction": "show_next_question",
+          "falseAction": "show_results"
+        },
+        "connections": []
+      },
+      {
+        "id": "trigger_results",
+        "type": "trigger",
+        "position": { "x": 50, "y": 300 },
+        "data": {
+          "triggerType": "message",
+          "filters": ["📊 Мои результаты"],
+          "description": "Просмотр результатов"
+        },
+        "connections": ["action_show_results"]
+      },
+      {
+        "id": "action_show_results",
+        "type": "action",
+        "position": { "x": 250, "y": 300 },
+        "data": {
+          "actionType": "send_message",
+          "message": "📊 Ваши результаты:\n\n🌍 География: {geography_score}/10\n📚 История: {history_score}/10\n🔬 Наука: {science_score}/10\n🎬 Кино: {movies_score}/10\n\n🏆 Общий рейтинг: {total_score} баллов",
+          "keyboard": [
+            [{"text": "🔄 Пройти еще раз"}],
+            [{"text": "🔙 Главное меню"}]
+          ]
+        },
+        "connections": []
+      }
+    ],
+    "defaultSettings": {
+      "questionsPerQuiz": 10,
+      "timeLimit": 30,
+      "showExplanations": true,
+      "saveResults": true,
+      "allowRetries": true,
+      "topics": ["География", "История", "Наука", "Кино"],
+      "difficultyLevels": ["Легкий", "Средний", "Сложный"]
+    }
+  },
+  "preview": {
+    "screenshots": ["quiz_preview.png"],
+    "demoBot": "@demo_quiz_bot",
+    "features": [
+      "Множественные темы",
+      "Подсчет результатов",
+      "Объяснения ответов",
+      "Рейтинговая система"
+    ]
+  },
+  "usage": {
+    "installs": 0,
+    "rating": 0
+  },
+  "createdAt": "2024-01-01T00:00:00Z",
+  "_meta": {
+    "lastModified": "2024-01-01T00:00:00Z",
+    "version": 1
+  }
+}

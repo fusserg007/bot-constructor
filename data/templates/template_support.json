@@ -1,0 +1,144 @@
+{
+  "id": "support",
+  "name": "Бот поддержки",
+  "description": "Система поддержки клиентов с FAQ, тикетами и переадресацией к операторам",
+  "category": "business",
+  "isPremium": true,
+  "configuration": {
+    "nodes": [
+      {
+        "id": "trigger_start",
+        "type": "trigger",
+        "position": { "x": 50, "y": 50 },
+        "data": {
+          "triggerType": "command",
+          "command": "/start",
+          "description": "Команда запуска бота поддержки"
+        },
+        "connections": ["action_support_menu"]
+      },
+      {
+        "id": "action_support_menu",
+        "type": "action",
+        "position": { "x": 250, "y": 50 },
+        "data": {
+          "actionType": "send_message",
+          "message": "🆘 Служба поддержки\n\nВыберите, чем можем помочь:",
+          "keyboard": [
+            [{"text": "❓ Частые вопросы"}],
+            [{"text": "📝 Создать обращение"}],
+            [{"text": "👨‍💼 Связаться с оператором"}],
+            [{"text": "📊 Статус обращения"}]
+          ]
+        },
+        "connections": []
+      },
+      {
+        "id": "trigger_faq",
+        "type": "trigger",
+        "position": { "x": 50, "y": 150 },
+        "data": {
+          "triggerType": "message",
+          "filters": ["❓ Частые вопросы"],
+          "description": "Запрос FAQ"
+        },
+        "connections": ["action_show_faq"]
+      },
+      {
+        "id": "action_show_faq",
+        "type": "action",
+        "position": { "x": 250, "y": 150 },
+        "data": {
+          "actionType": "send_message",
+          "message": "❓ Частые вопросы:\n\n1️⃣ Как оформить заказ?\n2️⃣ Способы оплаты\n3️⃣ Доставка и возврат\n4️⃣ Гарантия на товары\n\nВведите номер вопроса:",
+          "keyboard": [
+            [{"text": "1️⃣"}, {"text": "2️⃣"}, {"text": "3️⃣"}, {"text": "4️⃣"}],
+            [{"text": "🔙 Главное меню"}]
+          ]
+        },
+        "connections": []
+      },
+      {
+        "id": "trigger_create_ticket",
+        "type": "trigger",
+        "position": { "x": 50, "y": 250 },
+        "data": {
+          "triggerType": "message",
+          "filters": ["📝 Создать обращение"],
+          "description": "Создание нового тикета"
+        },
+        "connections": ["action_ticket_form"]
+      },
+      {
+        "id": "action_ticket_form",
+        "type": "action",
+        "position": { "x": 250, "y": 250 },
+        "data": {
+          "actionType": "send_message",
+          "message": "📝 Создание обращения\n\nОпишите вашу проблему подробно. Наш оператор ответит в течение 24 часов.",
+          "keyboard": [
+            [{"text": "🔙 Отмена"}]
+          ]
+        },
+        "connections": ["action_save_ticket"]
+      },
+      {
+        "id": "action_save_ticket",
+        "type": "action",
+        "position": { "x": 450, "y": 250 },
+        "data": {
+          "actionType": "save_data",
+          "dataType": "ticket",
+          "fields": ["user_id", "message", "timestamp", "status"],
+          "notifyAdmins": true
+        },
+        "connections": ["action_ticket_confirmation"]
+      },
+      {
+        "id": "action_ticket_confirmation",
+        "type": "action",
+        "position": { "x": 650, "y": 250 },
+        "data": {
+          "actionType": "send_message",
+          "message": "✅ Обращение #{ticket_id} создано\n\nМы ответим вам в ближайшее время. Для отслеживания статуса используйте команду /status {ticket_id}",
+          "keyboard": [
+            [{"text": "🔙 Главное меню"}]
+          ]
+        },
+        "connections": []
+      }
+    ],
+    "defaultSettings": {
+      "workingHours": "9:00-18:00",
+      "responseTime": "24 часа",
+      "adminIds": [],
+      "autoResponses": true,
+      "ticketCategories": ["Технические", "Оплата", "Доставка", "Другое"],
+      "faqItems": [
+        {
+          "question": "Как оформить заказ?",
+          "answer": "Выберите товар, добавьте в корзину и следуйте инструкциям."
+        }
+      ]
+    }
+  },
+  "preview": {
+    "screenshots": ["support_preview.png"],
+    "demoBot": "@demo_support_bot",
+    "features": [
+      "База знаний FAQ",
+      "Система тикетов",
+      "Уведомления операторов",
+      "Отслеживание статуса"
+    ]
+  },
+  "usage": {
+    "installs": 0,
+    "rating": 0
+  },
+  "createdAt": "2024-01-01T00:00:00Z",
+  "_meta": {
+    "lastModified": "2024-01-01T00:00:00Z",
+    "version": 1
+  }
+}

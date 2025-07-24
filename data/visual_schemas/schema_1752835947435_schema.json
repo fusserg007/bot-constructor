@@ -1,0 +1,59 @@
+{
+  "id": "1752835947435_schema",
+  "botId": "1752835947433",
+  "name": "Тестовый визуальный бот - Визуальная схема",
+  "nodes": [
+    {
+      "id": "trigger_start",
+      "type": "trigger",
+      "category": "triggers",
+      "position": {
+        "x": 100,
+        "y": 100
+      },
+      "config": {
+        "triggerType": "command",
+        "command": "/start",
+        "description": "Команда запуска бота"
+      },
+      "inputs": [],
+      "outputs": [
+        "output"
+      ]
+    },
+    {
+      "id": "action_welcome",
+      "type": "action",
+      "category": "actions",
+      "position": {
+        "x": 400,
+        "y": 100
+      },
+      "config": {
+        "actionType": "send_message",
+        "message": "Привет, {user_name}! Добро пожаловать в бота!",
+        "parseMode": "HTML"
+      },
+      "inputs": [
+        "input"
+      ],
+      "outputs": []
+    }
+  ],
+  "connections": [
+    {
+      "id": "conn_start_welcome",
+      "sourceNodeId": "trigger_start",
+      "sourceOutput": "output",
+      "targetNodeId": "action_welcome",
+      "targetInput": "input"
+    }
+  ],
+  "viewport": {
+    "x": 0,
+    "y": 0,
+    "scale": 1
+  },
+  "createdAt": "2025-07-18T10:52:27.435Z",
+  "updatedAt": "2025-07-18T10:52:27.435Z"
+}

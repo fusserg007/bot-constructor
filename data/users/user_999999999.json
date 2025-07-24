@@ -1,0 +1,32 @@
+{
+  "telegramId": 999999999,
+  "username": "test_bot_creator",
+  "firstName": "Test",
+  "lastName": "Bot Creator",
+  "subscription": {
+    "plan": "free",
+    "expiresAt": null,
+    "botsLimit": 1
+  },
+  "bots": [
+    "b1966933-bc46-4aeb-85a8-50f5a48f1ed4",
+    "e03c31d0-1d06-4a90-afdf-a2b501c4a216",
+    "a92b39fc-03f5-4469-9e6f-5452cd7bf9fd",
+    "7677c45e-468f-4dda-8dc1-a121cfc053e4",
+    "2aa596a7-053e-4659-b450-3ba43c5bd32d",
+    "88c0d54c-4b72-49da-ac22-9e14b032fe11",
+    "e3831eb9-466b-4491-98fc-19b872677bd3",
+    "d6258d10-ab74-4999-8cc1-09dbe1b20ab4",
+    "c0f9da01-1af0-4fc8-a33e-dd8a883119eb",
+    "50aa548b-1115-4b8d-a6f4-0df727aa4e09",
+    "f92cd945-1827-496a-8947-f775073778d4",
+    "6fd98426-dbd9-4f68-9ce0-9a2a7964094b",
+    "46feb045-d06d-4ce2-8b2a-9e1b99a45934"
+  ],
+  "createdAt": "2025-07-20T07:02:49.157Z",
+  "updatedAt": "2025-07-20T07:02:49.392Z",
+  "_meta": {
+    "lastModified": "2025-07-20T07:02:49.392Z",
+    "version": 14
+  }
+}

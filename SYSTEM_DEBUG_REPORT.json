@@ -1,0 +1,89 @@
+{
+  "timestamp": "2025-07-19T04:43:00.213Z",
+  "results": {
+    "server": {
+      "port": 3001,
+      "routes": [
+        "/api/auth",
+        "/api/bots",
+        "/api/templates",
+        "/api/visual-schemas",
+        "/api/stats",
+        "/api/subscription",
+        "/api/deployment",
+        "/webhook",
+        "/api/runtime",
+        "*"
+      ]
+    },
+    "files": {
+      "server.js": {
+        "exists": true,
+        "size": 4675,
+        "modified": "2025-07-19T04:01:10.529Z"
+      },
+      "package.json": {
+        "exists": true,
+        "size": 746,
+        "modified": "2025-07-16T12:30:38.454Z"
+      },
+      "routes/bots.js": {
+        "exists": true,
+        "size": 28527,
+        "modified": "2025-07-19T03:14:53.706Z"
+      },
+      "routes/auth.js": {
+        "exists": true,
+        "size": 6052,
+        "modified": "2025-07-16T11:55:20.019Z"
+      },
+      "utils/DataManager.js": {
+        "exists": true,
+        "size": 11544,
+        "modified": "2025-07-16T11:53:22.831Z"
+      },
+      "utils/FileStorage.js": {
+        "exists": true,
+        "size": 16371,
+        "modified": "2025-07-16T12:15:30.183Z"
+      }
+    },
+    "routes": {},
+    "frontend": {
+      "public/index.html": {
+        "exists": true,
+        "size": 2597,
+        "hasErrors": []
+      },
+      "public/app.js": {
+        "exists": true,
+        "size": 46642,
+        "hasErrors": [
+          "Несоответствие фигурных скобок: 297 открывающих, 298 закрывающих",
+          "Найдены потенциальные места ошибок (console.error/throw)"
+        ]
+      },
+      "public/styles.css": {
+        "exists": true,
+        "size": 69830,
+        "hasErrors": []
+      },
+      "public/js/VisualEditor.js": {
+        "exists": true,
+        "size": 49748,
+        "hasErrors": [
+          "Найдены потенциальные места ошибок (console.error/throw)"
+        ]
+      }
+    },
+    "errors": [
+      "Отсутствует фронтенд файл: public/dashboard.html",
+      "Отсутствует зависимость: multer"
+    ]
+  },
+  "summary": {
+    "totalErrors": 2,
+    "serverPort": 3001,
+    "filesChecked": 6
+  }
+}

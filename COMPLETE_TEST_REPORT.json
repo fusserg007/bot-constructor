@@ -1,0 +1,18 @@
+{
+  "timestamp": "2025-07-19T08:37:29.458Z",
+  "results": {
+    "server": {
+      "status": "running",
+      "port": 3002
+    },
+    "frontend": {
+      "status": "not_tested",
+      "filesFound": 10,
+      "filesTotal": 10
+    },
+    "api": {
+      "status": "not_tested"
+    },
+    "errors": []
+  }
+}

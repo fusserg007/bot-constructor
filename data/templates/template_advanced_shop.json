@@ -1,0 +1,142 @@
+{
+  "id": "advanced_shop",
+  "name": "Продвинутый магазин",
+  "description": "Полнофункциональный интернет-магазин с корзиной, оплатой и управлением заказами",
+  "category": "business",
+  "isPremium": true,
+  "configuration": {
+    "nodes": [
+      {
+        "id": "trigger_start",
+        "type": "trigger",
+        "position": { "x": 50, "y": 50 },
+        "data": {
+          "triggerType": "command",
+          "command": "/start",
+          "description": "Запуск магазина"
+        },
+        "connections": ["action_show_catalog"]
+      },
+      {
+        "id": "action_show_catalog",
+        "type": "action",
+        "position": { "x": 250, "y": 50 },
+        "data": {
+          "actionType": "send_message",
+          "message": "🛍️ Добро пожаловать в наш магазин!\n\nВыберите категорию товаров:",
+          "keyboard": [
+            ["📱 Электроника", "👕 Одежда"],
+            ["🏠 Дом и сад", "🎮 Игры"],
+            ["🛒 Корзина", "📞 Поддержка"]
+          ]
+        },
+        "connections": []
+      },
+      {
+        "id": "trigger_category",
+        "type": "trigger",
+        "position": { "x": 50, "y": 150 },
+        "data": {
+          "triggerType": "message",
+          "filters": ["📱 Электроника", "👕 Одежда", "🏠 Дом и сад", "🎮 Игры"],
+          "description": "Выбор категории"
+        },
+        "connections": ["action_show_products"]
+      },
+      {
+        "id": "action_show_products",
+        "type": "action",
+        "position": { "x": 250, "y": 150 },
+        "data": {
+          "actionType": "send_message",
+          "message": "Товары в категории {selected_category}:\n\n💰 Цены указаны в рублях\n📦 Доставка по всей России",
+          "keyboard": [
+            ["Товар 1 - 1000₽", "Товар 2 - 1500₽"],
+            ["Товар 3 - 2000₽", "Товар 4 - 2500₽"],
+            ["🛒 В корзину", "⬅️ Назад"]
+          ]
+        },
+        "connections": []
+      },
+      {
+        "id": "trigger_cart",
+        "type": "trigger",
+        "position": { "x": 50, "y": 250 },
+        "data": {
+          "triggerType": "message",
+          "filters": ["🛒 Корзина"],
+          "description": "Просмотр корзины"
+        },
+        "connections": ["action_show_cart"]
+      },
+      {
+        "id": "action_show_cart",
+        "type": "action",
+        "position": { "x": 250, "y": 250 },
+        "data": {
+          "actionType": "send_message",
+          "message": "🛒 Ваша корзина:\n\n{cart_items}\n\n💰 Итого: {total_price}₽",
+          "keyboard": [
+            ["💳 Оформить заказ"],
+            ["🗑️ Очистить корзину", "⬅️ Продолжить покупки"]
+          ]
+        },
+        "connections": []
+      },
+      {
+        "id": "trigger_checkout",
+        "type": "trigger",
+        "position": { "x": 50, "y": 350 },
+        "data": {
+          "triggerType": "message",
+          "filters": ["💳 Оформить заказ"],
+          "description": "Оформление заказа"
+        },
+        "connections": ["action_request_contact"]
+      },
+      {
+        "id": "action_request_contact",
+        "type": "action",
+        "position": { "x": 250, "y": 350 },
+        "data": {
+          "actionType": "send_message",
+          "message": "📞 Для оформления заказа поделитесь контактом:",
+          "keyboard": [
+            [{"text": "📞 Поделиться контактом", "request_contact": true}],
+            ["❌ Отмена"]
+          ]
+        },
+        "connections": []
+      }
+    ],
+    "defaultSettings": {
+      "currency": "RUB",
+      "deliveryPrice": 300,
+      "freeDeliveryFrom": 3000,
+      "paymentMethods": ["card", "cash", "transfer"],
+      "adminNotifications": true,
+      "orderTimeout": 24
+    }
+  },
+  "preview": {
+    "screenshots": ["advanced_shop_preview.png"],
+    "demoBot": "@demo_advanced_shop_bot",
+    "features": [
+      "Каталог товаров с категориями",
+      "Корзина покупок",
+      "Система заказов",
+      "Интеграция с платежами",
+      "Уведомления администратору",
+      "Управление доставкой"
+    ]
+  },
+  "usage": {
+    "installs": 0,
+    "rating": 0
+  },
+  "createdAt": "2024-01-01T00:00:00Z",
+  "_meta": {
+    "lastModified": "2024-01-01T00:00:00Z",
+    "version": 1
+  }
+}

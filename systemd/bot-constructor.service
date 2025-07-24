@@ -1,0 +1,39 @@
+[Unit]
+Description=Bot Constructor - Visual Bot Builder
+Documentation=https://github.com/bot-constructor/bot-constructor
+After=docker.service network-online.target
+Wants=network-online.target
+Requires=docker.service
+StartLimitIntervalSec=60
+StartLimitBurst=3
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+User=pi
+Group=pi
+WorkingDirectory=/home/pi/bot-constructor
+Environment=PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+Environment=HOME=/home/pi
+
+# Команды запуска
+ExecStartPre=/usr/local/bin/docker-compose down
+ExecStart=/usr/local/bin/docker-compose up -d
+ExecStop=/usr/local/bin/docker-compose down
+ExecReload=/usr/local/bin/docker-compose restart
+
+# Перезапуск при сбое
+Restart=on-failure
+RestartSec=10
+
+# Таймауты
+TimeoutStartSec=300
+TimeoutStopSec=60
+
+# Логирование
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=bot-constructor
+
+[Install]
+WantedBy=multi-user.target

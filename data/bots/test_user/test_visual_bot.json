@@ -1,0 +1,34 @@
+{
+  "id": "test_visual_bot",
+  "name": "Test Visual Bot",
+  "username": "test_visual_bot",
+  "token": "1234567890:ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890",
+  "status": "active",
+  "createdAt": "2025-07-18T09:48:58.940Z",
+  "updatedAt": "2025-07-18T09:48:59.053Z",
+  "visualSchemaId": "test_schema_001",
+  "configuration": {
+    "nodes": [
+      {
+        "id": "trigger_1",
+        "type": "trigger",
+        "data": {
+          "triggerType": "command",
+          "command": "/start"
+        },
+        "connections": [
+          "action_1"
+        ]
+      },
+      {
+        "id": "action_1",
+        "type": "action",
+        "data": {
+          "actionType": "send_message",
+          "text": "Привет! Я тестовый бот."
+        },
+        "connections": []
+      }
+    ]
+  }
+}

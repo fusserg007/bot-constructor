@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bot Constructor</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .test-section {
+            margin: 20px;
+            padding: 20px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+        }
+        .test-button {
+            margin: 10px;
+            padding: 15px 25px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        .status {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .info { background: #d1ecf1; color: #0c5460; }
+    </style>
+</head>
+<body>
+    <div id="status" class="status info">
+        Инициализация...
+    </div>
+
+    <div class="app-container">
+        <div id="dashboard-view" class="view active">
+            <header class="dashboard-header">
+                <h1>🤖 Bot Constructor</h1>
+                <p>Админская панель управления ботами</p>
+            </header>
+        
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon">🤖</div>
+                <div class="stat-content">
+                    <div class="stat-number" id="totalBots">0</div>
+                    <div class="stat-label">Всего ботов</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">✅</div>
+                <div class="stat-content">
+                    <div class="stat-number" id="activeBots">0</div>
+                    <div class="stat-label">Активных</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">💬</div>
+                <div class="stat-content">
+                    <div class="stat-number" id="totalMessages">0</div>
+                    <div class="stat-label">Сообщений</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">👥</div>
+                <div class="stat-content">
+                    <div class="stat-number" id="totalUsers">0</div>
+                    <div class="stat-label">Пользователей</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bots-section">
+            <div class="section-header">
+                <h2>📋 Список ботов</h2>
+                <button class="btn btn-primary" onclick="createNewBot()">
+                    ➕ Создать бота
+                </button>
+            </div>
+            <div id="botsContainer" class="bots-grid">
+                <div class="loading">🔄 Загрузка ботов...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Окно конструктора -->
+    <div id="constructor-view" class="view">
+        <header class="constructor-header">
+            <button class="btn btn-secondary" onclick="backToDashboard()">
+                ← Назад к списку
+            </button>
+            <div class="current-bot-info">
+                <h2 id="constructorBotName">Конструктор бота</h2>
+                <span id="constructorBotStatus" class="bot-status"></span>
+            </div>
+            <div class="constructor-actions">
+                <button class="btn btn-info" onclick="showGeneratedCode()">📄 Показать код</button>
+                <button class="btn btn-primary" onclick="validateCurrentSchema()">✅ Проверить</button>
+                <button class="btn btn-success" onclick="saveBotSchema()">💾 Сохранить</button>
+                <button class="btn btn-warning" onclick="testBot()">▶️ Тестировать</button>
+            </div>
+        </header>
+
+        <div class="constructor-workspace">
+            <div class="left-panel">
+                <h3>🧩 Узлы</h3>
+                <div class="node-categories">
+                    <div class="node-category">
+                        <h4>📨 Триггеры</h4>
+                        <div class="node-item" draggable="true" data-type="start">
+                            <span class="node-icon">🚀</span>
+                            <span>Старт</span>
+                        </div>
+                        <div class="node-item" draggable="true" data-type="command">
+                            <span class="node-icon">⚡</span>
+                            <span>Команда</span>
+                        </div>
+                        <div class="node-item" draggable="true" data-type="text">
+                            <span class="node-icon">💬</span>
+                            <span>Текст</span>
+                        </div>
+                    </div>
+                    
+                    <div class="node-category">
+                        <h4>🎯 Действия</h4>
+                        <div class="node-item" draggable="true" data-type="message">
+                            <span class="node-icon">📤</span>
+                            <span>Сообщение</span>
+                        </div>
+                        <div class="node-item" draggable="true" data-type="keyboard">
+                            <span class="node-icon">⌨️</span>
+                            <span>Клавиатура</span>
+                        </div>
+                        <div class="node-item" draggable="true" data-type="photo">
+                            <span class="node-icon">🖼️</span>
+                            <span>Фото</span>
+                        </div>
+                    </div>
+                    
+                    <div class="node-category">
+                        <h4>🔀 Логика</h4>
+                        <div class="node-item" draggable="true" data-type="condition">
+                            <span class="node-icon">❓</span>
+                            <span>Условие</span>
+                        </div>
+                        <div class="node-item" draggable="true" data-type="delay">
+                            <span class="node-icon">⏱️</span>
+                            <span>Задержка</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="center-panel">
+                <div class="canvas-container">
+                    <canvas id="editorCanvas" width="800" height="600"></canvas>
+                </div>
+            </div>
+
+            <div class="right-panel">
+                <div class="panel-tabs">
+                    <button class="tab-btn active" onclick="showTab('properties')">⚙️ Свойства</button>
+                    <button class="tab-btn" onclick="showTab('code')">📄 Код</button>
+                </div>
+                
+                <div id="properties-tab" class="tab-content active">
+                    <div id="propertiesPanel">
+                        <p>Выберите узел для настройки</p>
+                    </div>
+                </div>
+                
+                <div id="code-tab" class="tab-content">
+                    <div class="code-header">
+                        <h4>Сгенерированный код</h4>
+                        <button class="btn btn-sm" onclick="copyCode()">📋 Копировать</button>
+                    </div>
+                    <pre id="generatedCode" class="code-block">
+// Код будет сгенерирован автоматически
+// после создания схемы бота
+                    </pre>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальные окна -->
+    <div id="codeModal" class="modal" style="display: none;">
+        <div class="modal-content large">
+            <div class="modal-header">
+                <h3>📄 Сгенерированный код бота</h3>
+                <span class="close" onclick="closeCodeModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="code-tabs">
+                    <button class="code-tab-btn active" onclick="showCodeTab('main')">main.js</button>
+                    <button class="code-tab-btn" onclick="showCodeTab('handlers')">handlers.js</button>
+                    <button class="code-tab-btn" onclick="showCodeTab('config')">config.json</button>
+                </div>
+                <pre id="fullGeneratedCode" class="code-block large"></pre>
+                <div class="code-actions">
+                    <button class="btn btn-primary" onclick="downloadCode()">💾 Скачать</button>
+                    <button class="btn btn-secondary" onclick="copyFullCode()">📋 Копировать</button>
+                </div>
+            </div>
+        </div>
+        </div>
+    </div>
+
+    <script>
+        function updateStatus(message, type = 'info') {
+            const status = document.getElementById('status');
+            status.textContent = message;
+            status.className = `status ${type}`;
+            console.log(`[${type.toUpperCase()}] ${message}`);
+        }
+        
+        function updateInfo() {
+            const info = document.getElementById('info');
+            info.innerHTML = `
+                <strong>Состояние функций:</strong><br>
+                • createNewBot: ${typeof window.createNewBot}<br>
+                • backToDashboard: ${typeof window.backToDashboard}<br>
+                • editBot: ${typeof window.editBot}<br>
+                • BotConstructor: ${typeof window.BotConstructor}<br>
+                • botConstructor: ${typeof window.botConstructor}<br>
+                • VisualEditor: ${typeof window.VisualEditor}<br>
+                <br>
+                <strong>DOM элементы:</strong><br>
+                • dashboard-view: ${document.getElementById('dashboard-view') ? 'найден' : 'не найден'}<br>
+                • constructor-view: ${document.getElementById('constructor-view') ? 'найден' : 'не найден'}<br>
+            `;
+        }
+        
+        function testCreateNewBot() {
+            updateStatus('Тестирование createNewBot...', 'info');
+            try {
+                if (typeof window.createNewBot === 'function') {
+                    window.createNewBot();
+                    updateStatus('✅ createNewBot выполнена успешно', 'success');
+                } else {
+                    updateStatus('❌ createNewBot не найдена', 'error');
+                }
+            } catch (e) {
+                updateStatus(`❌ Ошибка в createNewBot: ${e.message}`, 'error');
+            }
+        }
+        
+        function testBackToDashboard() {
+            updateStatus('Тестирование backToDashboard...', 'info');
+            try {
+                if (typeof window.backToDashboard === 'function') {
+                    window.backToDashboard();
+                    updateStatus('✅ backToDashboard выполнена успешно', 'success');
+                } else {
+                    updateStatus('❌ backToDashboard не найдена', 'error');
+                }
+            } catch (e) {
+                updateStatus(`❌ Ошибка в backToDashboard: ${e.message}`, 'error');
+            }
+        }
+        
+        function testEditBot(botId) {
+            updateStatus('Тестирование editBot...', 'info');
+            try {
+                if (typeof window.editBot === 'function') {
+                    window.editBot(botId);
+                    updateStatus('✅ editBot выполнена успешно', 'success');
+                } else {
+                    updateStatus('❌ editBot не найдена', 'error');
+                }
+            } catch (e) {
+                updateStatus(`❌ Ошибка в editBot: ${e.message}`, 'error');
+            }
+        }
+        
+        function showDashboard() {
+            const dashboard = document.getElementById('dashboard-view');
+            const constructor = document.getElementById('constructor-view');
+            
+            if (dashboard && constructor) {
+                dashboard.style.display = 'block';
+                constructor.style.display = 'none';
+                updateStatus('✅ Дашборд показан', 'success');
+            } else {
+                updateStatus('❌ Элементы видов не найдены', 'error');
+            }
+        }
+        
+        function showConstructor() {
+            const dashboard = document.getElementById('dashboard-view');
+            const constructor = document.getElementById('constructor-view');
+            
+            if (dashboard && constructor) {
+                dashboard.style.display = 'none';
+                constructor.style.display = 'block';
+                updateStatus('✅ Конструктор показан', 'success');
+            } else {
+                updateStatus('❌ Элементы видов не найдены', 'error');
+            }
+        }
+        
+        // Инициализация
+        document.addEventListener('DOMContentLoaded', () => {
+            updateStatus('DOM загружен, ожидание скриптов...', 'info');
+            updateInfo();
+            
+            setTimeout(() => {
+                updateInfo();
+                if (typeof window.createNewBot === 'function') {
+                    updateStatus('✅ Все скрипты загружены успешно', 'success');
+                } else {
+                    updateStatus('⚠️ Некоторые функции не загружены', 'error');
+                }
+            }, 2000);
+        });
+        
+        // Обновляем информацию каждые 3 секунды
+        setInterval(updateInfo, 3000);
+    </script>
+    
+    <!-- Подключаем те же скрипты -->
+    <script src="js/VisualEditor.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>

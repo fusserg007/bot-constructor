@@ -1,0 +1,236 @@
+{
+  "id": "event",
+  "name": "Бот мероприятий",
+  "description": "Организация событий с регистрацией участников и уведомлениями",
+  "category": "community",
+  "isPremium": false,
+  "configuration": {
+    "nodes": [
+      {
+        "id": "trigger_start",
+        "type": "trigger",
+        "position": {
+          "x": 50,
+          "y": 50
+        },
+        "data": {
+          "triggerType": "command",
+          "command": "/start",
+          "description": "Запуск бота мероприятий"
+        },
+        "connections": [
+          "action_events_menu"
+        ]
+      },
+      {
+        "id": "action_events_menu",
+        "type": "action",
+        "position": {
+          "x": 250,
+          "y": 50
+        },
+        "data": {
+          "actionType": "send_message",
+          "message": "🎉 Добро пожаловать в систему мероприятий!\n\nВыберите действие:",
+          "keyboard": [
+            [
+              {
+                "text": "📅 Предстоящие события"
+              }
+            ],
+            [
+              {
+                "text": "✅ Мои регистрации"
+              }
+            ],
+            [
+              {
+                "text": "🔔 Настройки уведомлений"
+              }
+            ],
+            [
+              {
+                "text": "ℹ️ Информация"
+              }
+            ]
+          ]
+        },
+        "connections": []
+      },
+      {
+        "id": "trigger_upcoming_events",
+        "type": "trigger",
+        "position": {
+          "x": 50,
+          "y": 150
+        },
+        "data": {
+          "triggerType": "message",
+          "filters": [
+            "📅 Предстоящие события"
+          ],
+          "description": "Просмотр предстоящих событий"
+        },
+        "connections": [
+          "action_show_events"
+        ]
+      },
+      {
+        "id": "action_show_events",
+        "type": "action",
+        "position": {
+          "x": 250,
+          "y": 150
+        },
+        "data": {
+          "actionType": "send_message",
+          "message": "📅 Предстоящие мероприятия:\n\n🎪 Конференция по IT\n📅 15 января 2024, 10:00\n📍 Москва, ул. Тверская 1\n👥 Свободных мест: 50\n\n🎭 Мастер-класс по дизайну\n📅 20 января 2024, 14:00\n📍 Онлайн\n👥 Свободных мест: 25",
+          "keyboard": [
+            [
+              {
+                "text": "📝 Регистрация на IT конференцию"
+              }
+            ],
+            [
+              {
+                "text": "📝 Регистрация на мастер-класс"
+              }
+            ],
+            [
+              {
+                "text": "🔙 Главное меню"
+              }
+            ]
+          ]
+        },
+        "connections": []
+      },
+      {
+        "id": "trigger_register",
+        "type": "trigger",
+        "position": {
+          "x": 50,
+          "y": 250
+        },
+        "data": {
+          "triggerType": "message",
+          "filters": [
+            "📝 Регистрация"
+          ],
+          "description": "Регистрация на мероприятие"
+        },
+        "connections": [
+          "action_registration_form"
+        ]
+      },
+      {
+        "id": "action_registration_form",
+        "type": "action",
+        "position": {
+          "x": 250,
+          "y": 250
+        },
+        "data": {
+          "actionType": "send_message",
+          "message": "📝 Регистрация на мероприятие\n\nУкажите ваши данные:\n\n👤 Имя:\n📧 Email:\n📱 Телефон:",
+          "keyboard": [
+            [
+              {
+                "text": "🔙 Отмена"
+              }
+            ]
+          ]
+        },
+        "connections": [
+          "action_save_registration"
+        ]
+      },
+      {
+        "id": "action_save_registration",
+        "type": "action",
+        "position": {
+          "x": 450,
+          "y": 250
+        },
+        "data": {
+          "actionType": "save_data",
+          "dataType": "registration",
+          "fields": [
+            "event_id",
+            "user_id",
+            "name",
+            "email",
+            "phone"
+          ],
+          "notifyAdmins": true
+        },
+        "connections": [
+          "action_registration_success"
+        ]
+      },
+      {
+        "id": "action_registration_success",
+        "type": "action",
+        "position": {
+          "x": 650,
+          "y": 250
+        },
+        "data": {
+          "actionType": "send_message",
+          "message": "✅ Регистрация успешна!\n\nВы зарегистрированы на мероприятие.\nЗа день до события мы пришлем напоминание.",
+          "keyboard": [
+            [
+              {
+                "text": "📅 Мои регистрации"
+              }
+            ],
+            [
+              {
+                "text": "🔙 Главное меню"
+              }
+            ]
+          ]
+        },
+        "connections": []
+      }
+    ],
+    "defaultSettings": {
+      "reminderTime": 24,
+      "maxParticipants": 100,
+      "requireApproval": false,
+      "collectFeedback": true,
+      "adminIds": [],
+      "notificationChannels": [
+        "telegram",
+        "email"
+      ],
+      "eventCategories": [
+        "Конференции",
+        "Мастер-классы",
+        "Вебинары",
+        "Встречи"
+      ]
+    }
+  },
+  "preview": {
+    "screenshots": [
+      "event_preview.png"
+    ],
+    "demoBot": "@demo_event_bot",
+    "features": [
+      "Календарь мероприятий",
+      "Регистрация участников",
+      "Автоматические напоминания",
+      "Управление местами"
+    ]
+  },
+  "usage": {
+    "installs": 1,
+    "rating": 0
+  },
+  "createdAt": "2024-01-01T00:00:00Z",
+  "_meta": {
+    "lastModified": "2025-07-17T07:51:58.179Z",
+    "version": 1
+  }
+}

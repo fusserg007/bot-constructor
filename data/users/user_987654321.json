@@ -1,0 +1,18 @@
+{
+  "telegramId": 987654321,
+  "username": "",
+  "firstName": "",
+  "lastName": "",
+  "subscription": {
+    "plan": "free",
+    "expiresAt": null,
+    "botsLimit": 1
+  },
+  "bots": [],
+  "createdAt": "2025-07-19T03:49:53.856Z",
+  "updatedAt": "2025-07-19T03:49:53.856Z",
+  "_meta": {
+    "lastModified": "2025-07-19T03:49:53.860Z",
+    "version": 1
+  }
+}

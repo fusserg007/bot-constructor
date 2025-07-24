@@ -1,0 +1,41 @@
+{
+  "id": "1752835947503_migrated",
+  "botId": "1752835947486_legacy",
+  "name": "Устаревший бот - Мигрированная схема",
+  "nodes": [
+    {
+      "id": "legacy_trigger",
+      "type": "command",
+      "category": "triggers",
+      "position": {
+        "x": 100,
+        "y": 100
+      },
+      "config": {
+        "triggerType": "command",
+        "command": "/help"
+      }
+    },
+    {
+      "id": "legacy_action",
+      "type": "send_message",
+      "category": "actions",
+      "position": {
+        "x": 300,
+        "y": 100
+      },
+      "config": {
+        "actionType": "send_message",
+        "message": "Это устаревший бот"
+      }
+    }
+  ],
+  "connections": [],
+  "viewport": {
+    "x": 0,
+    "y": 0,
+    "scale": 1
+  },
+  "createdAt": "2025-07-18T10:52:27.503Z",
+  "updatedAt": "2025-07-18T10:52:27.503Z"
+}

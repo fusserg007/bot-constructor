@@ -1,0 +1,1126 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bot Constructor - Админ панель</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <nav class="navbar">
+            <div class="nav-brand">
+                <h1>🤖 Bot Constructor</h1>
+                <span class="admin-badge">ADMIN</span>
+            </div>
+            <div class="nav-menu">
+                <a href="#" onclick="showSection('templates')">Шаблоны</a>
+                <a href="#" onclick="showSection('stats')">Статистика</a>
+            </div>
+        </nav>
+
+        <main class="main-content">
+            <!-- Постоянно видимый список ботов -->
+            <div class="bots-sidebar">
+                <div class="bots-header">
+                    <h3>🤖 Боты</h3>
+                    <button class="btn btn-primary btn-sm" onclick="createBot()">➕</button>
+                </div>
+                <div id="botsContainer" class="bots-list">
+                    <div class="loading">Загрузка ботов...</div>
+                </div>
+                <div class="bots-actions">
+                    <button class="btn btn-secondary btn-sm" onclick="adminApp.runHealthCheck()">🔍 Диагностика</button>
+                    <button class="btn btn-secondary btn-sm" onclick="adminApp.validateAllTokens()">🔑 Токены</button>
+                </div>
+            </div>
+
+            <!-- Основная рабочая область -->
+            <div class="main-workspace">
+                <!-- Секция визуального редактора -->
+                <section id="editor-section" class="content-section active">
+                    <div class="editor-header">
+                        <div class="editor-title">
+                            <h2>🎨 <span id="currentBotName">Выберите бота</span></h2>
+                        </div>
+                        <div class="editor-controls">
+                            <button class="btn btn-secondary" onclick="saveBotSchema()">💾 Сохранить</button>
+                            <button class="btn btn-info" onclick="showVersionHistory()">📚 Версии</button>
+                            <button class="btn btn-primary" onclick="validateCurrentSchema()">✅ Проверить</button>
+                            <button class="btn btn-success" onclick="testBotSchema()">▶️ Тест</button>
+                            <button class="btn btn-warning" onclick="clearCanvas()">🗑️ Очистить</button>
+                        </div>
+                    </div>
+                
+                <div class="editor-container">
+                    <div class="editor-sidebar">
+                        <h4>Библиотека узлов</h4>
+                        <div id="nodeLibrary" class="node-library">
+                            <div class="node-category">
+                                <h5>📨 Сообщения</h5>
+                                <div class="node-item" draggable="true" data-type="message">
+                                    <span class="node-icon">💬</span>
+                                    <span>Отправить сообщение</span>
+                                </div>
+                                <div class="node-item" draggable="true" data-type="input">
+                                    <span class="node-icon">📝</span>
+                                    <span>Получить ввод</span>
+                                </div>
+                            </div>
+                            
+                            <div class="node-category">
+                                <h5>🔀 Логика</h5>
+                                <div class="node-item" draggable="true" data-type="condition">
+                                    <span class="node-icon">❓</span>
+                                    <span>Условие</span>
+                                </div>
+                                <div class="node-item" draggable="true" data-type="delay">
+                                    <span class="node-icon">⏱️</span>
+                                    <span>Задержка</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="editor-main">
+                        <canvas id="editorCanvas" width="800" height="600"></canvas>
+                    </div>
+                    
+                    <div class="editor-properties">
+                        <h4>Свойства</h4>
+                        <div id="propertiesPanel">
+                            <p>Выберите узел для настройки</p>
+                        </div>
+                    </div>
+                </div>
+                </section>
+
+                <!-- Секция шаблонов -->
+                <section id="templates-section" class="content-section">
+                <div class="section-header">
+                    <h2>📋 Шаблоны ботов</h2>
+                    <button class="btn btn-primary" onclick="createTemplate()">➕ Создать шаблон</button>
+                </div>
+                
+                <div id="templatesContainer" class="templates-grid">
+                    <div class="loading">Загрузка шаблонов...</div>
+                </div>
+            </section>
+
+            <!-- Секция статистики -->
+            <section id="stats-section" class="content-section">
+                <div class="section-header">
+                    <h2>📊 Статистика</h2>
+                </div>
+                
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <h3>Всего ботов</h3>
+                        <div class="stat-value" id="totalBots">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Активных</h3>
+                        <div class="stat-value" id="activeBots">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Сообщений</h3>
+                        <div class="stat-value" id="totalMessages">0</div>
+                    </div>
+                </div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <!-- Подключаем компоненты визуального редактора (временно отключены) -->
+    <!-- <script src="js/NodeLibrary.js"></script>
+    <script src="js/SmartSuggestions.js"></script>
+    <script src="js/SuggestionsPanel.js"></script>
+    <script src="js/ConnectionTypes.js"></script>
+    <script src="js/ConnectionManager.js"></script>
+    <script src="js/ConnectionTypesPanel.js"></script>
+    <script src="js/ModuleSystem.js"></script>
+    <script src="js/ModulePanel.js"></script>
+    <script src="js/TemplateSystem.js"></script>
+    <script src="js/TemplateWizard.js"></script>
+    <script src="js/TemplatePanel.js"></script>
+    <script src="js/VisualEditor.js"></script>
+    <script src="js/PropertyPanel.js"></script>
+    <script src="js/NodeLibraryPanel.js"></script> -->
+    <!-- Подключаем упрощенный визуальный редактор -->
+    <script src="js/SimpleVisualEditor.js"></script>
+    
+    <!-- Основной скрипт приложения -->
+    <script src="js/app-simple.js"></script>
+    
+    <style>
+        /* Основная структура */
+        .container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+        }
+        
+        .main-content {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+        
+        /* Боковая панель с ботами */
+        .bots-sidebar {
+            width: 280px;
+            background: #f8f9fa;
+            border-right: 1px solid #e1e4e8;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        
+        .bots-header {
+            padding: 15px;
+            border-bottom: 1px solid #e1e4e8;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .bots-header h3 {
+            margin: 0;
+            font-size: 16px;
+            color: #2c3e50;
+        }
+        
+        .bots-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px;
+        }
+        
+        .bots-actions {
+            padding: 10px;
+        }
+        
+        /* Стили для списка ботов */
+        .bot-item {
+            background: white;
+            border: 1px solid #e1e4e8;
+            border-radius: 6px;
+            padding: 12px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .bot-item:hover {
+            border-color: #007bff;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .bot-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+        
+        .bot-header h4 {
+            margin: 0;
+            font-size: 14px;
+            color: #2c3e50;
+        }
+        
+        .bot-status {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #e74c3c;
+        }
+        
+        .bot-status.active {
+            background: #2ecc71;
+        }
+        
+        .bot-info {
+            margin: 0;
+            font-size: 12px;
+            color: #666;
+        }
+        
+        .bot-actions {
+            display: flex;
+            gap: 5px;
+            margin-top: 8px;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+        
+        /* Стили для кнопок */
+        .btn {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+        
+        .btn-xs {
+            padding: 4px 8px;
+            font-size: 11px;
+        }
+        
+        .btn-sm {
+            padding: 5px 10px;
+            font-size: 11px;
+        }
+        
+        .btn-primary {
+            background: #007bff;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #0056b3;
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background: #545b62;
+        }
+        
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background: #1e7e34;
+        }
+        
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background: #c82333;
+        }
+        
+        .btn-warning {
+            background: #ffc107;
+            color: #212529;
+        }
+        
+        .btn-warning:hover {
+            background: #e0a800;
+        }
+            border-top: 1px solid #e1e4e8;
+            display: flex;
+            gap: 5px;
+        }
+        
+        .bots-actions .btn {
+            flex: 1;
+            font-size: 11px;
+            padding: 6px 8px;
+        }
+        
+        /* Основная рабочая область */
+        .main-workspace {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        
+        .editor-header {
+            padding: 15px 20px;
+            background: white;
+            border-bottom: 1px solid #e1e4e8;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .editor-title h2 {
+            margin: 0;
+            font-size: 18px;
+            color: #2c3e50;
+        }
+        
+        /* Стили для списка ботов */
+        .bot-item {
+            background: white;
+            border: 1px solid #e1e4e8;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .bot-item:hover {
+            border-color: #3498db;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .bot-item.active {
+            border-color: #3498db;
+            background: #e3f2fd;
+        }
+        
+        .bot-item-name {
+            font-weight: 600;
+            margin-bottom: 4px;
+            color: #2c3e50;
+        }
+        
+        .bot-item-info {
+            font-size: 12px;
+            color: #7f8c8d;
+        }
+        
+        .admin-badge {
+            background: #dc3545;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            margin-left: 10px;
+        }
+        
+        .content-section {
+            display: none;
+        }
+        
+        .content-section.active {
+            display: block;
+        }
+        
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #eee;
+        }
+        
+        .bots-grid, .templates-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        
+        .bot-card, .template-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            border: 1px solid #eee;
+        }
+        
+        .bot-card h3, .template-card h3 {
+            margin: 0 0 10px 0;
+            color: #333;
+        }
+        
+        .bot-status {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        .bot-status.active {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .bot-status.inactive {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .editor-container {
+            display: flex;
+            height: calc(100vh - 200px);
+            min-height: 500px;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        
+        .editor-sidebar {
+            width: 280px;
+            min-width: 250px;
+            background: #f8f9fa;
+            padding: 15px;
+            border-right: 1px solid #ddd;
+            overflow-y: auto;
+            flex-shrink: 0;
+        }
+        
+        .editor-main {
+            flex: 1;
+            background: #fff;
+            position: relative;
+            min-width: 400px;
+        }
+        
+        .editor-properties {
+            width: 300px;
+            min-width: 250px;
+            background: #f8f9fa;
+            padding: 15px;
+            border-left: 1px solid #ddd;
+            overflow-y: auto;
+            flex-shrink: 0;
+        }
+        
+        #editorCanvas {
+            border: none;
+            background: #fafafa;
+            cursor: crosshair;
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+        
+        .node-category {
+            margin-bottom: 20px;
+        }
+        
+        .node-category h5 {
+            margin: 0 0 10px 0;
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .node-item {
+            display: flex;
+            align-items: center;
+            padding: 8px;
+            margin-bottom: 5px;
+            background: white;
+            border-radius: 5px;
+            cursor: grab;
+            border: 1px solid #ddd;
+            transition: all 0.2s ease;
+        }
+        
+        .node-item:hover {
+            background: #e3f2fd;
+            border-color: #2196f3;
+        }
+        
+        .node-item:active {
+            cursor: grabbing;
+        }
+        
+        .node-icon {
+            margin-right: 8px;
+            font-size: 16px;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        
+        .stat-card h3 {
+            margin: 0 0 10px 0;
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .stat-value {
+            font-size: 32px;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+        
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.2s ease;
+        }
+        
+        .btn-primary {
+            background: #007bff;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #0056b3;
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background: #545b62;
+        }
+        
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background: #1e7e34;
+        }
+        
+        .create-bot-form {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        
+        .form-group textarea {
+            height: 80px;
+            resize: vertical;
+        }
+        
+        .form-help {
+            display: block;
+            margin-top: 5px;
+            font-size: 12px;
+            color: #666;
+        }
+        
+        .form-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 30px;
+        }
+        
+        .form-group input[type="checkbox"] {
+            width: auto;
+            margin-right: 8px;
+        }
+        
+        .bot-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .messenger-badge {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        .messenger-badge.telegram {
+            background: #0088cc;
+            color: white;
+        }
+        
+        .messenger-badge.max {
+            background: #ff6b35;
+            color: white;
+        }
+        
+        .bot-username {
+            color: #666;
+            font-size: 12px;
+        }
+        
+        .btn-info {
+            background: #17a2b8;
+            color: white;
+        }
+        
+        .btn-info:hover {
+            background: #138496;
+        }
+        
+        /* Адаптивность для разных масштабов */
+        @media (max-width: 1200px) {
+            .editor-sidebar {
+                width: 220px;
+            }
+            .editor-properties {
+                width: 220px;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .editor-container {
+                flex-direction: column;
+                height: auto;
+            }
+            .editor-sidebar, .editor-properties {
+                width: 100%;
+                height: 200px;
+            }
+            .editor-main {
+                height: 400px;
+            }
+        }
+        
+        /* Улучшения для высокого DPI и масштабирования */
+        .editor-container {
+            font-size: 14px;
+        }
+        
+        .node-item {
+            font-size: 13px;
+            padding: 10px 8px;
+        }
+        
+        .btn {
+            font-size: 13px;
+            padding: 10px 18px;
+        }
+        
+        .bot-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 15px;
+        }
+        
+        .bot-actions .btn {
+            flex: 1;
+            min-width: 120px;
+            font-size: 12px;
+            padding: 8px 12px;
+        }
+        
+        @media (max-width: 1400px) {
+            .bot-actions .btn {
+                font-size: 11px;
+                padding: 6px 8px;
+                min-width: 100px;
+            }
+        }
+        
+        /* Панель отладки */
+        .debug-panel {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 10px;
+            margin-bottom: 15px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        
+        .debug-panel h5 {
+            margin: 0 0 10px 0;
+            color: #495057;
+            font-size: 14px;
+        }
+        
+        .debug-log {
+            background: #ffffff;
+            border: 1px solid #ced4da;
+            border-radius: 3px;
+            padding: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            max-height: 120px;
+            overflow-y: auto;
+            margin-bottom: 8px;
+            white-space: pre-wrap;
+        }
+        
+        .debug-log .debug-info {
+            color: #007bff;
+        }
+        
+        .debug-log .debug-success {
+            color: #28a745;
+        }
+        
+        .debug-log .debug-error {
+            color: #dc3545;
+        }
+        
+        .debug-log .debug-warning {
+            color: #ffc107;
+        }
+        
+        /* Стили для панели свойств */
+        .property-form {
+            margin-top: 15px;
+        }
+        
+        .property-form label {
+            display: block;
+            margin: 10px 0 5px 0;
+            font-weight: bold;
+            color: #333;
+            font-size: 12px;
+        }
+        
+        .property-form input,
+        .property-form textarea,
+        .property-form select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 12px;
+            margin-bottom: 10px;
+        }
+        
+        .property-form textarea {
+            height: 60px;
+            resize: vertical;
+        }
+        
+        .property-form .btn {
+            margin: 5px 5px 5px 0;
+            font-size: 11px;
+            padding: 6px 12px;
+        }
+    </style>
+
+    <!-- Модальное окно для результатов валидации -->
+    <div id="validationModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>✅ Результаты валидации схемы</h3>
+                <span class="close" onclick="closeValidationModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div id="validationResults" class="validation-results">
+                    <!-- Результаты валидации будут загружены динамически -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeValidationModal()">Закрыть</button>
+                <button class="btn btn-primary" onclick="fixValidationIssues()">Исправить автоматически</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно для управления версиями -->
+    <div id="versionModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>📚 История версий схемы</h3>
+                <span class="close" onclick="closeVersionModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div id="versionList" class="version-list">
+                    <!-- Список версий будет загружен динамически -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeVersionModal()">Закрыть</button>
+                <button class="btn btn-primary" onclick="createManualVersion()">Создать версию</button>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .modal {
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: 5% auto;
+            padding: 0;
+            border: none;
+            border-radius: 8px;
+            width: 80%;
+            max-width: 600px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+
+        .modal-header {
+            padding: 20px;
+            border-bottom: 1px solid #e1e4e8;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h3 {
+            margin: 0;
+            color: #2c3e50;
+        }
+
+        .close {
+            color: #aaa;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close:hover {
+            color: #000;
+        }
+
+        .modal-body {
+            padding: 20px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .modal-footer {
+            padding: 20px;
+            border-top: 1px solid #e1e4e8;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        .version-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .version-item {
+            background: #f8f9fa;
+            border: 1px solid #e1e4e8;
+            border-radius: 6px;
+            padding: 15px;
+            transition: all 0.2s;
+        }
+
+        .version-item:hover {
+            border-color: #007bff;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .version-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .version-id {
+            font-family: monospace;
+            font-size: 12px;
+            color: #666;
+        }
+
+        .version-date {
+            font-size: 12px;
+            color: #666;
+        }
+
+        .version-comment {
+            font-size: 14px;
+            color: #2c3e50;
+            margin-bottom: 8px;
+        }
+
+        .version-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .version-actions .btn {
+            padding: 4px 8px;
+            font-size: 12px;
+        }
+
+        /* Стили для индикаторов валидации */
+        .btn.btn-success {
+            background-color: #28a745;
+            border-color: #28a745;
+        }
+
+        .btn.btn-warning {
+            background-color: #ffc107;
+            border-color: #ffc107;
+            color: #212529;
+        }
+
+        .btn.btn-danger {
+            background-color: #dc3545;
+            border-color: #dc3545;
+        }
+
+        .btn.btn-primary {
+            background-color: #007bff;
+            border-color: #007bff;
+        }
+
+        .btn.btn-info {
+            background-color: #17a2b8;
+            border-color: #17a2b8;
+        }
+
+        .btn.btn-secondary {
+            background-color: #6c757d;
+            border-color: #6c757d;
+        }
+
+        /* Анимация для кнопки валидации */
+        .btn[onclick="validateCurrentSchema()"] {
+            transition: all 0.3s ease;
+        }
+
+        /* Стили для результатов валидации */
+        .validation-results {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .validation-section {
+            margin-bottom: 20px;
+        }
+
+        .validation-section h4 {
+            margin: 0 0 10px 0;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .validation-section.success h4 {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .validation-section.errors h4 {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .validation-section.warnings h4 {
+            background-color: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+
+        .validation-section.suggestions h4 {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+
+        .validation-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .validation-item {
+            padding: 8px 12px;
+            margin-bottom: 5px;
+            border-radius: 4px;
+            font-size: 13px;
+            line-height: 1.4;
+        }
+
+        .validation-item.error {
+            background-color: #f8f9fa;
+            border-left: 4px solid #dc3545;
+        }
+
+        .validation-item.warning {
+            background-color: #f8f9fa;
+            border-left: 4px solid #ffc107;
+        }
+
+        .validation-item.suggestion {
+            background-color: #f8f9fa;
+            border-left: 4px solid #17a2b8;
+        }
+
+        .validation-summary {
+            background-color: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 6px;
+            padding: 15px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .validation-summary.valid {
+            background-color: #d4edda;
+            border-color: #c3e6cb;
+            color: #155724;
+        }
+
+        .validation-summary.invalid {
+            background-color: #f8d7da;
+            border-color: #f5c6cb;
+            color: #721c24;
+        }
+    </style>
+</body>
+</html>

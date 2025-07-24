@@ -1,0 +1,294 @@
+{
+  "id": "game",
+  "name": "Игровой бот",
+  "description": "Мини-игры и развлечения: угадай число, камень-ножницы-бумага, анекдоты",
+  "category": "entertainment",
+  "isPremium": false,
+  "configuration": {
+    "nodes": [
+      {
+        "id": "trigger_start",
+        "type": "trigger",
+        "position": {
+          "x": 50,
+          "y": 50
+        },
+        "data": {
+          "triggerType": "command",
+          "command": "/start",
+          "description": "Запуск игрового бота"
+        },
+        "connections": [
+          "action_games_menu"
+        ]
+      },
+      {
+        "id": "action_games_menu",
+        "type": "action",
+        "position": {
+          "x": 250,
+          "y": 50
+        },
+        "data": {
+          "actionType": "send_message",
+          "message": "🎮 Игровой центр!\n\nВыберите развлечение:",
+          "keyboard": [
+            [
+              {
+                "text": "🎲 Угадай число"
+              },
+              {
+                "text": "✂️ Камень-ножницы-бумага"
+              }
+            ],
+            [
+              {
+                "text": "😂 Анекдот"
+              },
+              {
+                "text": "🎯 Викторина"
+              }
+            ],
+            [
+              {
+                "text": "📊 Моя статистика"
+              },
+              {
+                "text": "🏆 Рейтинг игроков"
+              }
+            ]
+          ]
+        },
+        "connections": []
+      },
+      {
+        "id": "trigger_guess_number",
+        "type": "trigger",
+        "position": {
+          "x": 50,
+          "y": 150
+        },
+        "data": {
+          "triggerType": "message",
+          "filters": [
+            "🎲 Угадай число"
+          ],
+          "description": "Игра угадай число"
+        },
+        "connections": [
+          "action_start_guess_game"
+        ]
+      },
+      {
+        "id": "action_start_guess_game",
+        "type": "action",
+        "position": {
+          "x": 250,
+          "y": 150
+        },
+        "data": {
+          "actionType": "send_message",
+          "message": "🎲 Игра 'Угадай число'\n\nЯ загадал число от 1 до 100.\nУ вас есть 7 попыток!\n\nВведите ваше число:",
+          "keyboard": [
+            [
+              {
+                "text": "🔙 Главное меню"
+              }
+            ]
+          ]
+        },
+        "connections": [
+          "condition_check_guess"
+        ]
+      },
+      {
+        "id": "condition_check_guess",
+        "type": "condition",
+        "position": {
+          "x": 450,
+          "y": 150
+        },
+        "data": {
+          "conditionType": "number_guess",
+          "description": "Проверка угаданного числа"
+        },
+        "connections": {
+          "correct": [
+            "action_win_guess"
+          ],
+          "higher": [
+            "action_hint_higher"
+          ],
+          "lower": [
+            "action_hint_lower"
+          ],
+          "game_over": [
+            "action_lose_guess"
+          ]
+        }
+      },
+      {
+        "id": "trigger_rock_paper_scissors",
+        "type": "trigger",
+        "position": {
+          "x": 50,
+          "y": 250
+        },
+        "data": {
+          "triggerType": "message",
+          "filters": [
+            "✂️ Камень-ножницы-бумага"
+          ],
+          "description": "Игра камень-ножницы-бумага"
+        },
+        "connections": [
+          "action_rps_game"
+        ]
+      },
+      {
+        "id": "action_rps_game",
+        "type": "action",
+        "position": {
+          "x": 250,
+          "y": 250
+        },
+        "data": {
+          "actionType": "send_message",
+          "message": "✂️ Камень, ножницы, бумага!\n\nВыберите ваш ход:",
+          "keyboard": [
+            [
+              {
+                "text": "🗿 Камень"
+              },
+              {
+                "text": "✂️ Ножницы"
+              },
+              {
+                "text": "📄 Бумага"
+              }
+            ],
+            [
+              {
+                "text": "🔙 Главное меню"
+              }
+            ]
+          ]
+        },
+        "connections": [
+          "action_rps_result"
+        ]
+      },
+      {
+        "id": "action_rps_result",
+        "type": "action",
+        "position": {
+          "x": 450,
+          "y": 250
+        },
+        "data": {
+          "actionType": "send_message",
+          "message": "Вы: {user_choice}\nЯ: {bot_choice}\n\n{result}\n\n🏆 Счет - Вы: {user_score} | Я: {bot_score}",
+          "keyboard": [
+            [
+              {
+                "text": "🔄 Еще раз"
+              },
+              {
+                "text": "🔙 Главное меню"
+              }
+            ]
+          ]
+        },
+        "connections": []
+      },
+      {
+        "id": "trigger_joke",
+        "type": "trigger",
+        "position": {
+          "x": 50,
+          "y": 350
+        },
+        "data": {
+          "triggerType": "message",
+          "filters": [
+            "😂 Анекдот"
+          ],
+          "description": "Рассказать анекдот"
+        },
+        "connections": [
+          "action_tell_joke"
+        ]
+      },
+      {
+        "id": "action_tell_joke",
+        "type": "action",
+        "position": {
+          "x": 250,
+          "y": 350
+        },
+        "data": {
+          "actionType": "send_message",
+          "message": "😂 {random_joke}",
+          "keyboard": [
+            [
+              {
+                "text": "😂 Еще анекдот"
+              },
+              {
+                "text": "👍 Смешно"
+              },
+              {
+                "text": "👎 Не смешно"
+              }
+            ],
+            [
+              {
+                "text": "🔙 Главное меню"
+              }
+            ]
+          ]
+        },
+        "connections": []
+      }
+    ],
+    "defaultSettings": {
+      "maxGuessAttempts": 7,
+      "guessRange": [
+        1,
+        100
+      ],
+      "saveStatistics": true,
+      "jokeCategories": [
+        "общие",
+        "программисты",
+        "животные"
+      ],
+      "enableRating": true,
+      "dailyLimits": {
+        "jokes": 50,
+        "games": 100
+      }
+    }
+  },
+  "preview": {
+    "screenshots": [
+      "game_preview.png"
+    ],
+    "demoBot": "@demo_game_bot",
+    "features": [
+      "Угадай число",
+      "Камень-ножницы-бумага",
+      "База анекдотов",
+      "Статистика игр"
+    ]
+  },
+  "usage": {
+    "installs": 1,
+    "rating": 0
+  },
+  "createdAt": "2024-01-01T00:00:00Z",
+  "_meta": {
+    "lastModified": "2025-07-17T07:50:02.513Z",
+    "version": 1
+  }
+}

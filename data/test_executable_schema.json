@@ -1,0 +1,59 @@
+{
+  "nodes": [
+    {
+      "id": "node_1",
+      "type": "trigger",
+      "data": {
+        "command": "/start",
+        "description": "Начало работы с ботом",
+        "triggerType": "command"
+      },
+      "connections": [
+        "node_2"
+      ]
+    },
+    {
+      "id": "node_2",
+      "type": "action",
+      "data": {
+        "text": "Привет! Я визуальный бот.",
+        "parse_mode": "none",
+        "actionType": "send_message"
+      },
+      "connections": {
+        "success": [
+          "node_3"
+        ]
+      }
+    },
+    {
+      "id": "node_3",
+      "type": "action",
+      "data": {
+        "delay": 1,
+        "unit": "seconds",
+        "actionType": "delay_action"
+      },
+      "connections": {
+        "success": [
+          "node_4"
+        ]
+      }
+    },
+    {
+      "id": "node_4",
+      "type": "action",
+      "data": {
+        "photo_url": "https://example.com/photo.jpg",
+        "caption": "Это тестовое фото",
+        "actionType": "send_photo"
+      },
+      "connections": []
+    }
+  ],
+  "metadata": {
+    "convertedFrom": "visual",
+    "convertedAt": "2025-07-18T09:48:59.144Z",
+    "nodeCount": 4
+  }
+}
