@@ -8,10 +8,17 @@ const ProcessManager = require('./utils/ProcessManager');
 const app = express();
 const PORT = process.env.PORT || 3002;
 
+// Middleware оптимизации производительности
+const { apiCacheMiddleware, performanceMiddleware } = require('./utils/OptimizationMiddleware');
+
 // Middleware
 app.use(cors());
 app.use(bodyParser.json({ limit: '10mb' }));
 app.use(bodyParser.urlencoded({ extended: true }));
+
+// Подключаем middleware оптимизации только для API
+app.use('/api/', performanceMiddleware());
+app.use('/api/', apiCacheMiddleware());
 
 // Полностью отключаем CSP для разработки
 app.use((req, res, next) => {
@@ -139,12 +146,63 @@ app.use('/api/bots', botsRoutes);
 app.use('/api/templates', templatesRoutes);
 app.use('/api/visual-schemas', visualSchemasRoutes);
 app.use('/api/stats', statsRoutes);
+app.use('/api/performance', require('./routes/performance'));
+app.use('/api/help', require('./routes/help'));
+app.use('/api/logs', require('./routes/logs'));
+app.use('/api/debug', require('./routes/debug'));
+app.use('/api/bots', require('./routes/platforms'));
+app.use('/api/export', require('./routes/export'));
 
 app.use('/api/deployment', deploymentRoutes);
 app.use('/webhook', webhooksRoutes);
 app.use('/api/runtime', runtimeRoutes);
 
 // React приложение уже раздается выше как основное
+
+// Dashboard статистика
+app.get('/api/stats/dashboard', (req, res) => {
+  try {
+    // Получаем список всех ботов
+    const botsDir = path.join(__dirname, 'data', 'bots');
+    let totalBots = 0;
+    let activeBots = 0;
+    let totalMessages = 0;
+    let totalUsers = 0;
+
+    if (fs.existsSync(botsDir)) {
+      const botFiles = fs.readdirSync(botsDir).filter(file => file.endsWith('.json'));
+      totalBots = botFiles.length;
+
+      botFiles.forEach(file => {
+        try {
+          const botData = JSON.parse(fs.readFileSync(path.join(botsDir, file), 'utf8'));
+          if (botData.status === 'active') {
+            activeBots++;
+          }
+          if (botData.stats) {
+            totalMessages += botData.stats.messagesProcessed || 0;
+            totalUsers += botData.stats.activeUsers || 0;
+          }
+        } catch (error) {
+          console.error(`Ошибка чтения бота ${file}:`, error);
+        }
+      });
+    }
+
+    res.json({
+      totalBots,
+      activeBots,
+      totalMessages,
+      totalUsers
+    });
+  } catch (error) {
+    console.error('Ошибка получения статистики dashboard:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Внутренняя ошибка сервера'
+    });
+  }
+});
 
 // API health check
 app.get('/api/health', (req, res) => {

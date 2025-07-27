@@ -1,0 +1,190 @@
+{
+  "botId": "multiplatform-test-bot",
+  "timestamp": "2025-07-26T11:31:08.357Z",
+  "multiplatformTest": {
+    "platforms": [
+      "telegram",
+      "max"
+    ],
+    "totalTests": 8,
+    "totalSuccessful": 6,
+    "successRate": 75,
+    "platformIsolation": true,
+    "messageAdaptation": true,
+    "results": [
+      {
+        "platform": "telegram",
+        "results": [
+          {
+            "message": {
+              "text": "/start",
+              "userId": "tg_user_1",
+              "chatId": "tg_chat_1"
+            },
+            "result": {
+              "success": true,
+              "trigger": "Универсальная команда /start",
+              "results": [
+                {
+                  "success": true,
+                  "type": "send_message",
+                  "platform": "telegram",
+                  "adapted": false
+                }
+              ]
+            }
+          },
+          {
+            "message": {
+              "text": "/platform",
+              "userId": "tg_user_1",
+              "chatId": "tg_chat_1"
+            },
+            "result": {
+              "success": true,
+              "trigger": "Команда /platform",
+              "results": [
+                {
+                  "success": true,
+                  "type": "send_message",
+                  "platform": "telegram",
+                  "adapted": false
+                }
+              ]
+            }
+          },
+          {
+            "message": {
+              "text": "/telegram",
+              "userId": "tg_user_2",
+              "chatId": "tg_chat_2"
+            },
+            "result": {
+              "success": true,
+              "trigger": "Команда /telegram (только Telegram)",
+              "results": [
+                {
+                  "success": true,
+                  "type": "send_message",
+                  "platform": "telegram",
+                  "adapted": false
+                }
+              ]
+            }
+          },
+          {
+            "message": {
+              "text": "/max",
+              "userId": "tg_user_1",
+              "chatId": "tg_chat_1"
+            },
+            "result": {
+              "success": false,
+              "reason": "No matching trigger"
+            }
+          }
+        ],
+        "stats": {
+          "messages": 3,
+          "errors": 0,
+          "lastActivity": "2025-07-26T11:31:08.142Z"
+        }
+      },
+      {
+        "platform": "max",
+        "results": [
+          {
+            "message": {
+              "text": "/start",
+              "userId": "max_user_1",
+              "chatId": "max_chat_1"
+            },
+            "result": {
+              "success": true,
+              "trigger": "Универсальная команда /start",
+              "results": [
+                {
+                  "success": true,
+                  "type": "send_message",
+                  "platform": "max",
+                  "adapted": false
+                }
+              ]
+            }
+          },
+          {
+            "message": {
+              "text": "/platform",
+              "userId": "max_user_1",
+              "chatId": "max_chat_1"
+            },
+            "result": {
+              "success": true,
+              "trigger": "Команда /platform",
+              "results": [
+                {
+                  "success": true,
+                  "type": "send_message",
+                  "platform": "max",
+                  "adapted": true
+                }
+              ]
+            }
+          },
+          {
+            "message": {
+              "text": "/max",
+              "userId": "max_user_2",
+              "chatId": "max_chat_2"
+            },
+            "result": {
+              "success": true,
+              "trigger": "Команда /max (только MAX)",
+              "results": [
+                {
+                  "success": true,
+                  "type": "send_message",
+                  "platform": "max",
+                  "adapted": false
+                }
+              ]
+            }
+          },
+          {
+            "message": {
+              "text": "/telegram",
+              "userId": "max_user_1",
+              "chatId": "max_chat_1"
+            },
+            "result": {
+              "success": false,
+              "reason": "No matching trigger"
+            }
+          }
+        ],
+        "stats": {
+          "messages": 3,
+          "errors": 0,
+          "lastActivity": "2025-07-26T11:31:08.293Z"
+        }
+      }
+    ]
+  },
+  "stats": {
+    "totalMessages": 6,
+    "platformCount": 2,
+    "platformStats": {
+      "telegram": {
+        "messages": 3,
+        "errors": 0,
+        "lastActivity": "2025-07-26T11:31:08.142Z"
+      },
+      "max": {
+        "messages": 3,
+        "errors": 0,
+        "lastActivity": "2025-07-26T11:31:08.293Z"
+      }
+    },
+    "isolationWorking": true
+  }
+}

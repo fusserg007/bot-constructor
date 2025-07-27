@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Система логирования - Bot Constructor</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            color: #333;
+        }
+        
+        .header {
+            background: #2563eb;
+            color: white;
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .header h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        
+        .controls {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+        
+        .controls h2 {
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+        
+        .form-group {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        
+        .form-group label {
+            min-width: 120px;
+            font-weight: 500;
+        }
+        
+        .form-group input, .form-group select {
+            padding: 0.5rem;
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+            font-size: 0.9rem;
+        }
+        
+        .btn {
+            background: #2563eb;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: background 0.2s;
+        }
+        
+        .btn:hover {
+            background: #1d4ed8;
+        }
+        
+        .btn-secondary {
+            background: #6b7280;
+        }
+        
+        .btn-secondary:hover {
+            background: #4b5563;
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        
+        .stat-card h3 {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #2563eb;
+            margin-bottom: 0.5rem;
+        }
+        
+        .stat-card p {
+            color: #6b7280;
+            font-size: 0.9rem;
+        }
+        
+        .logs-container {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .logs-header {
+            background: #f9fafb;
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .logs-header h2 {
+            color: #1f2937;
+        }
+        
+        .logs-list {
+            max-height: 600px;
+            overflow-y: auto;
+        }
+        
+        .log-entry {
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid #f3f4f6;
+            transition: background 0.2s;
+        }
+        
+        .log-entry:hover {
+            background: #f9fafb;
+        }
+        
+        .log-entry:last-child {
+            border-bottom: none;
+        }
+        
+        .log-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+        
+        .log-type {
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            text-transform: uppercase;
+        }
+        
+        .log-type.message {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+        
+        .log-type.command {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        
+        .log-type.action {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        
+        .log-type.error {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+        
+        .log-timestamp {
+            color: #6b7280;
+            font-size: 0.8rem;
+        }
+        
+        .log-data {
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 0.8rem;
+            background: #f9fafb;
+            padding: 0.5rem;
+            border-radius: 4px;
+            color: #374151;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            color: #6b7280;
+        }
+        
+        .error {
+            background: #fee2e2;
+            color: #991b1b;
+            padding: 1rem;
+            border-radius: 4px;
+            margin: 1rem 0;
+        }
+        
+        .auto-refresh {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .auto-refresh input[type="checkbox"] {
+            margin: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🔍 Система логирования</h1>
+    </div>
+    
+    <div class="container">
+        <div class="controls">
+            <h2>Фильтры и настройки</h2>
+            
+            <div class="form-group">
+                <label for="botId">ID бота:</label>
+                <input type="text" id="botId" placeholder="Введите ID бота">
+                <button class="btn" onclick="loadLogs()">Загрузить логи</button>
+                <button class="btn btn-secondary" onclick="clearLogs()">Очистить</button>
+            </div>
+            
+            <div class="form-group">
+                <label for="eventType">Тип события:</label>
+                <select id="eventType">
+                    <option value="">Все типы</option>
+                    <option value="message">Сообщения</option>
+                    <option value="command">Команды</option>
+                    <option value="action">Действия</option>
+                    <option value="error">Ошибки</option>
+                </select>
+                
+                <label for="timeRange">Период:</label>
+                <select id="timeRange">
+                    <option value="1">Последний час</option>
+                    <option value="24">Последние 24 часа</option>
+                    <option value="168">Последняя неделя</option>
+                    <option value="720">Последний месяц</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <div class="auto-refresh">
+                    <input type="checkbox" id="autoRefresh">
+                    <label for="autoRefresh">Автообновление (каждые 5 сек)</label>
+                </div>
+            </div>
+        </div>
+        
+        <div class="stats" id="stats" style="display: none;">
+            <div class="stat-card">
+                <h3 id="totalEvents">0</h3>
+                <p>Всего событий</p>
+            </div>
+            <div class="stat-card">
+                <h3 id="messagesCount">0</h3>
+                <p>Сообщений</p>
+            </div>
+            <div class="stat-card">
+                <h3 id="commandsCount">0</h3>
+                <p>Команд</p>
+            </div>
+            <div class="stat-card">
+                <h3 id="errorsCount">0</h3>
+                <p>Ошибок</p>
+            </div>
+            <div class="stat-card">
+                <h3 id="activeUsers">0</h3>
+                <p>Активных пользователей</p>
+            </div>
+        </div>
+        
+        <div class="logs-container">
+            <div class="logs-header">
+                <h2>Логи событий</h2>
+            </div>
+            <div class="logs-list" id="logsList">
+                <div class="loading">
+                    Выберите бота и нажмите "Загрузить логи" для просмотра событий
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let autoRefreshInterval = null;
+        
+        async function loadLogs() {
+            const botId = document.getElementById('botId').value.trim();
+            if (!botId) {
+                alert('Введите ID бота');
+                return;
+            }
+            
+            const eventType = document.getElementById('eventType').value;
+            const timeRange = parseInt(document.getElementById('timeRange').value);
+            
+            const logsList = document.getElementById('logsList');
+            logsList.innerHTML = '<div class="loading">Загрузка логов...</div>';
+            
+            try {
+                // Загружаем логи
+                const logsResponse = await fetch(`/api/logs/${botId}?eventType=${eventType}&hours=${timeRange}`);
+                
+                if (!logsResponse.ok) {
+                    throw new Error('Ошибка загрузки логов');
+                }
+                
+                const data = await logsResponse.json();
+                
+                // Обновляем статистику
+                updateStats(data.stats);
+                
+                // Отображаем логи
+                displayLogs(data.logs);
+                
+            } catch (error) {
+                logsList.innerHTML = `<div class="error">Ошибка загрузки логов: ${error.message}</div>`;
+            }
+        }
+        
+        function updateStats(stats) {
+            document.getElementById('totalEvents').textContent = stats.totalEvents || 0;
+            document.getElementById('messagesCount').textContent = stats.messagesProcessed || 0;
+            document.getElementById('commandsCount').textContent = stats.commandsExecuted || 0;
+            document.getElementById('errorsCount').textContent = stats.errorsCount || 0;
+            document.getElementById('activeUsers').textContent = stats.activeUsers || 0;
+            
+            document.getElementById('stats').style.display = 'grid';
+        }
+        
+        function displayLogs(logs) {
+            const logsList = document.getElementById('logsList');
+            
+            if (logs.length === 0) {
+                logsList.innerHTML = '<div class="loading">Логи не найдены</div>';
+                return;
+            }
+            
+            const logsHtml = logs.map(log => {
+                const timestamp = new Date(log.timestamp).toLocaleString('ru-RU');
+                const dataStr = JSON.stringify(log.data, null, 2);
+                
+                return `
+                    <div class="log-entry">
+                        <div class="log-meta">
+                            <span class="log-type ${log.eventType}">${log.eventType}</span>
+                            <span class="log-timestamp">${timestamp}</span>
+                        </div>
+                        <div class="log-data">${dataStr}</div>
+                    </div>
+                `;
+            }).join('');
+            
+            logsList.innerHTML = logsHtml;
+        }
+        
+        function clearLogs() {
+            document.getElementById('logsList').innerHTML = '<div class="loading">Выберите бота и нажмите "Загрузить логи" для просмотра событий</div>';
+            document.getElementById('stats').style.display = 'none';
+        }
+        
+        // Автообновление
+        document.getElementById('autoRefresh').addEventListener('change', function() {
+            if (this.checked) {
+                autoRefreshInterval = setInterval(() => {
+                    const botId = document.getElementById('botId').value.trim();
+                    if (botId) {
+                        loadLogs();
+                    }
+                }, 5000);
+            } else {
+                if (autoRefreshInterval) {
+                    clearInterval(autoRefreshInterval);
+                    autoRefreshInterval = null;
+                }
+            }
+        });
+        
+        // Загрузка логов по Enter
+        document.getElementById('botId').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                loadLogs();
+            }
+        });
+    </script>
+</body>
+</html>

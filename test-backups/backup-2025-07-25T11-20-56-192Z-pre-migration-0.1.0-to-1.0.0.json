@@ -1,0 +1,7 @@
+{
+  "name": "Simple Bot",
+  "description": "Basic bot without nodes",
+  "platforms": [
+    "telegram"
+  ]
+}

@@ -133,7 +133,8 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
       if (!response.ok) {
         throw new Error('Failed to fetch bot');
       }
-      const bot = await response.json();
+      const result = await response.json();
+      const bot = result.success ? result.data : result;
       dispatch({ type: 'SET_CURRENT_BOT', payload: bot });
     } catch (error) {
       dispatch({ type: 'SET_ERROR', payload: error instanceof Error ? error.message : 'Unknown error' });

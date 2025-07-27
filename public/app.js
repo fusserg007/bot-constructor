@@ -22,7 +22,14 @@ class BotConstructor {
 
     setupEventListeners() {
         // Глобальные функции для HTML
-        window.backToDashboard = () => this.showView('dashboard');
+        // Глобальные функции для HTML
+        window.backToDashboard = () => {
+            console.log('🔙 Возврат к дашборду');
+            if (window.botConstructor) {
+                window.botConstructor.currentBot = null;
+                window.botConstructor.showView('dashboard');
+            }
+        };
         window.editBot = (botId) => this.editBot(botId);
         window.createNewBot = () => this.createNewBot();
         window.saveBotSchema = () => this.saveBotSchema();
@@ -37,31 +44,187 @@ class BotConstructor {
         this.setupDragDrop();
     }
 
-    // === УПРАВЛЕНИЕ ВИДАМИ ===
+
+    // === ИСПРАВЛЕНИЕ ОТОБРАЖЕНИЯ СХЕМЫ ===
+    forceDisplaySchema() {
+        console.log('🎨 Принудительное отображение схемы...');
+        
+        const canvas = document.getElementById('editorCanvas');
+        if (!canvas) {
+            console.error('❌ Canvas не найден!');
+            return;
+        }
+        
+        const ctx = canvas.getContext('2d');
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        // Проверяем данные бота
+        if (!this.currentBot) {
+            console.warn('⚠️ Текущий бот не загружен');
+            this.drawEmptySchema(ctx);
+            return;
+        }
+        
+        if (!this.currentBot.configuration || !this.currentBot.configuration.nodes) {
+            console.warn('⚠️ Конфигурация бота отсутствует');
+            this.drawEmptySchema(ctx);
+            return;
+        }
+        
+        const nodes = this.currentBot.configuration.nodes;
+        console.log(`📊 Отображение ${nodes.length} нодов`);
+        
+        // Отображаем каждый нод
+        nodes.forEach((node, index) => {
+            console.log(`Отрисовка ноды ${index + 1}: ${node.id} (${node.type})`);
+            this.drawNode(ctx, node, index);
+        });
+        
+        // Отображаем связи
+        this.drawConnections(ctx);
+        
+        console.log('✅ Схема отображена');
+    }
+    
+    drawNode(ctx, node, index) {
+        // Вычисляем позицию ноды
+        let x = node.position?.x || (50 + (index % 4) * 180);
+        let y = node.position?.y || (50 + Math.floor(index / 4) * 120);
+        
+        // Размеры ноды
+        const width = 150;
+        const height = 80;
+        
+        // Цвет фона в зависимости от типа
+        const colors = {
+            'trigger': '#e3f2fd',
+            'action': '#f3e5f5', 
+            'condition': '#fff3e0'
+        };
+        const bgColor = colors[node.type] || '#f5f5f5';
+        
+        // Рисуем фон ноды
+        ctx.fillStyle = bgColor;
+        ctx.fillRect(x, y, width, height);
+        
+        // Рисуем рамку
+        ctx.strokeStyle = '#333';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(x, y, width, height);
+        
+        // Рисуем текст
+        ctx.fillStyle = '#000';
+        ctx.font = 'bold 12px Arial';
+        ctx.textAlign = 'center';
+        
+        // ID ноды
+        ctx.fillText(node.id || 'Unknown', x + width/2, y + 25);
+        
+        // Тип ноды
+        ctx.font = '10px Arial';
+        ctx.fillText(`[${node.type || 'unknown'}]`, x + width/2, y + 45);
+        
+        // Дополнительная информация
+        if (node.data?.command) {
+            ctx.fillText(node.data.command, x + width/2, y + 65);
+        } else if (node.data?.actionType) {
+            ctx.fillText(node.data.actionType, x + width/2, y + 65);
+        }
+    }
+    
+    getNodeColor(type) {
+        const colors = {
+            'trigger': '#e3f2fd',
+            'action': '#f3e5f5', 
+            'condition': '#fff3e0',
+            'default': '#f5f5f5'
+        };
+        return colors[type] || colors.default;
+    }
+    
+    drawConnections(ctx) {
+        if (!this.currentBot?.configuration?.nodes) return;
+        
+        ctx.strokeStyle = '#666';
+        ctx.lineWidth = 2;
+        
+        this.currentBot.configuration.nodes.forEach((node, index) => {
+            const fromX = (node.position?.x || (100 + index * 150)) + 60;
+            const fromY = (node.position?.y || (100 + Math.floor(index / 4) * 100)) + 60;
+            
+            if (node.connections && Array.isArray(node.connections)) {
+                node.connections.forEach(targetId => {
+                    const targetIndex = this.currentBot.configuration.nodes.findIndex(n => n.id === targetId);
+                    if (targetIndex >= 0) {
+                        const toX = (this.currentBot.configuration.nodes[targetIndex].position?.x || (100 + targetIndex * 150)) + 60;
+                        const toY = (this.currentBot.configuration.nodes[targetIndex].position?.y || (100 + Math.floor(targetIndex / 4) * 100));
+                        
+                        ctx.beginPath();
+                        ctx.moveTo(fromX, fromY);
+                        ctx.lineTo(toX, toY);
+                        ctx.stroke();
+                    }
+                });
+            }
+        });
+    }
+    
+    drawEmptySchema(ctx) {
+        ctx.fillStyle = '#f0f0f0';
+        ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+        
+        ctx.fillStyle = '#666';
+        ctx.font = '18px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText('Схема бота будет отображена здесь', ctx.canvas.width / 2, ctx.canvas.height / 2 - 20);
+        ctx.fillText('Перетащите узлы из левой панели', ctx.canvas.width / 2, ctx.canvas.height / 2 + 20);
+    }
+
+        // === УПРАВЛЕНИЕ ВИДАМИ ===
     showView(viewName) {
         console.log(`🔄 Переключение на вид: ${viewName}`);
         
+        // Отладочная информация
+        console.log('🔍 Отладка showView:', {
+            viewName,
+            currentBot: this.currentBot?.name,
+            nodesCount: this.currentBot?.configuration?.nodes?.length
+        });
+        
         try {
+            // Скрываем все виды
             document.querySelectorAll('.view').forEach(view => {
                 view.classList.remove('active');
+                view.style.display = 'none';
             });
             
+            // Показываем нужный вид
             const viewElement = document.getElementById(`${viewName}-view`);
             if (viewElement) {
                 viewElement.classList.add('active');
+                viewElement.style.display = 'block';
                 console.log(`✅ Вид ${viewName} активирован`);
             } else {
                 console.warn(`⚠️ Элемент ${viewName}-view не найден`);
+                return;
             }
             
             this.currentView = viewName;
 
+            // Специальная обработка для конструктора
             if (viewName === 'constructor') {
-                this.initCanvas();
-                this.generateCode();
-                // Повторно настраиваем drag & drop для конструктора
-                setTimeout(() => this.setupDragDrop(), 100);
+                setTimeout(() => {
+                    this.initCanvas();
+                    this.displayBotSchema();
+                    this.setupDragDrop();
+                }, 100);
             }
+            
+            // Специальная обработка для дашборда
+            if (viewName === 'dashboard') {
+                this.loadDashboardData();
+            }
+            
         } catch (error) {
             console.error(`❌ Ошибка при переключении вида ${viewName}:`, error);
         }
@@ -220,17 +383,40 @@ class BotConstructor {
 
     // === КОНСТРУКТОР ===
     async editBot(botId) {
+        console.log(`✏️ Редактирование бота: ${botId}`);
+        
         try {
             const response = await fetch(`${this.apiUrl}/bots/${botId}`);
-            const data = await response.json();
-
-            if (data.success) {
-                this.currentBot = data.data;
-                this.loadBotIntoConstructor(this.currentBot);
-                this.showView('constructor');
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
             }
+            
+            const responseData = await response.json();
+            this.currentBot = responseData.data || responseData;
+            console.log('📊 Бот загружен:', this.currentBot);
+            console.log(`🔗 Количество нодов: ${this.currentBot.configuration?.nodes?.length || 0}`);
+            
+            // Обновляем заголовок
+            const nameElement = document.getElementById('constructorBotName');
+            const statusElement = document.getElementById('constructorBotStatus');
+            
+            if (nameElement) nameElement.textContent = `Редактирование: ${this.currentBot.name}`;
+            if (statusElement) {
+                statusElement.textContent = this.currentBot.status;
+                statusElement.className = `bot-status ${this.currentBot.status}`;
+            }
+            
+            // Переключаемся на конструктор
+            this.showView('constructor');
+            
+            // Отображаем схему с задержкой
+            setTimeout(() => {
+                this.displayBotSchema();
+            }, 300);
+            
         } catch (error) {
-            console.error('Ошибка загрузки бота:', error);
+            console.error('❌ Ошибка загрузки бота:', error);
+            this.showStatus(`Ошибка загрузки бота: ${error.message}`, 'error');
         }
     }
 
@@ -303,6 +489,14 @@ class BotConstructor {
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
         this.drawGrid(ctx);
+        
+        // Если есть загруженный бот, показываем его схему
+        if (this.currentBot && this.currentBot.configuration && this.currentBot.configuration.nodes) {
+            this.displayBotSchema();
+            return;
+        }
+        
+        // Иначе показываем обычные ноды из редактора
         this.connections.forEach(conn => this.drawConnection(ctx, conn));
         this.nodes.forEach(node => this.drawNode(ctx, node));
 
@@ -702,6 +896,138 @@ class BotConstructor {
             alert('Ошибка при создании бота: ' + error.message);
         }
     }
+
+    displayBotSchema() {
+        console.log('🎨 Отображение схемы бота...');
+        
+        const canvas = document.getElementById('editorCanvas');
+        if (!canvas) {
+            console.error('❌ Canvas не найден!');
+            return;
+        }
+        
+        const ctx = canvas.getContext('2d');
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        if (!this.currentBot || !this.currentBot.configuration || !this.currentBot.configuration.nodes) {
+            console.warn('⚠️ Нет данных для отображения схемы');
+            this.drawEmptySchema(ctx);
+            return;
+        }
+        
+        const nodes = this.currentBot.configuration.nodes;
+        console.log(`📊 Отображение ${nodes.length} нодов`);
+        
+        // Отображаем все ноды
+        nodes.forEach((node, index) => {
+            this.drawSingleNode(ctx, node, index);
+        });
+        
+        // Отображаем связи
+        this.drawNodeConnections(ctx, nodes);
+    }
+    
+    drawSingleNode(ctx, node, index) {
+        // Позиция ноды (если не указана, вычисляем автоматически)
+        const x = node.position?.x || (50 + (index % 4) * 180);
+        const y = node.position?.y || (50 + Math.floor(index / 4) * 120);
+        
+        // Размеры ноды
+        const width = 150;
+        const height = 80;
+        
+        // Цвет фона в зависимости от типа
+        const colors = {
+            'trigger': '#e3f2fd',
+            'action': '#f3e5f5', 
+            'condition': '#fff3e0'
+        };
+        ctx.fillStyle = colors[node.type] || '#f5f5f5';
+        ctx.fillRect(x, y, width, height);
+        
+        // Рамка
+        ctx.strokeStyle = '#333';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(x, y, width, height);
+        
+        // Текст - ID ноды
+        ctx.fillStyle = '#000';
+        ctx.font = 'bold 12px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText(node.id || 'Unknown', x + width/2, y + 25);
+        
+        // Текст - тип ноды
+        ctx.font = '10px Arial';
+        ctx.fillText(`[${node.type}]`, x + width/2, y + 45);
+        
+        // Дополнительная информация
+        if (node.data?.command) {
+            ctx.fillText(node.data.command, x + width/2, y + 65);
+        } else if (node.data?.actionType) {
+            ctx.fillText(node.data.actionType, x + width/2, y + 65);
+        }
+    }
+    
+    drawNodeConnections(ctx, nodes) {
+        ctx.strokeStyle = '#666';
+        ctx.lineWidth = 2;
+        
+        nodes.forEach((node, fromIndex) => {
+            const fromX = (node.position?.x || (50 + (fromIndex % 4) * 180)) + 75;
+            const fromY = (node.position?.y || (50 + Math.floor(fromIndex / 4) * 120)) + 80;
+            
+            if (node.connections) {
+                let connections = [];
+                
+                // Обрабатываем разные форматы connections
+                if (Array.isArray(node.connections)) {
+                    connections = node.connections;
+                } else if (typeof node.connections === 'object') {
+                    // Для condition нодов
+                    Object.values(node.connections).forEach(connArray => {
+                        if (Array.isArray(connArray)) {
+                            connections = connections.concat(connArray);
+                        }
+                    });
+                }
+                
+                connections.forEach(targetId => {
+                    const targetIndex = nodes.findIndex(n => n.id === targetId);
+                    if (targetIndex >= 0) {
+                        const targetNode = nodes[targetIndex];
+                        const toX = (targetNode.position?.x || (50 + (targetIndex % 4) * 180)) + 75;
+                        const toY = (targetNode.position?.y || (50 + Math.floor(targetIndex / 4) * 120));
+                        
+                        // Рисуем стрелку
+                        ctx.beginPath();
+                        ctx.moveTo(fromX, fromY);
+                        ctx.lineTo(toX, toY);
+                        ctx.stroke();
+                        
+                        // Рисуем наконечник стрелки
+                        const angle = Math.atan2(toY - fromY, toX - fromX);
+                        ctx.beginPath();
+                        ctx.moveTo(toX, toY);
+                        ctx.lineTo(toX - 10 * Math.cos(angle - Math.PI/6), toY - 10 * Math.sin(angle - Math.PI/6));
+                        ctx.moveTo(toX, toY);
+                        ctx.lineTo(toX - 10 * Math.cos(angle + Math.PI/6), toY - 10 * Math.sin(angle + Math.PI/6));
+                        ctx.stroke();
+                    }
+                });
+            }
+        });
+    }
+    
+    drawEmptySchema(ctx) {
+        ctx.fillStyle = '#f0f0f0';
+        ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+        
+        ctx.fillStyle = '#666';
+        ctx.font = '18px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText('Схема бота пуста', ctx.canvas.width / 2, ctx.canvas.height / 2 - 20);
+        ctx.fillText('Перетащите узлы из левой панели', ctx.canvas.width / 2, ctx.canvas.height / 2 + 20);
+    }
 }
 
 // Глобальные функции
@@ -740,4 +1066,6 @@ document.addEventListener('DOMContentLoaded', () => {
         errorDiv.textContent = 'Ошибка загрузки приложения: ' + error.message;
         document.body.appendChild(errorDiv);
     }
-});
+
+
+}

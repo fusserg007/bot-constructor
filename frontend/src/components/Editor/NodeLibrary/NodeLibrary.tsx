@@ -117,9 +117,10 @@ const categories: { key: NodeCategory; name: string; icon: string }[] = [
 
 interface NodeLibraryProps {
   onNodeAdd?: (nodeType: string) => void;
+  onNodeHelpRequest?: (nodeType: string) => void;
 }
 
-const NodeLibrary: React.FC<NodeLibraryProps> = ({ onNodeAdd }) => {
+const NodeLibrary: React.FC<NodeLibraryProps> = ({ onNodeAdd, onNodeHelpRequest }) => {
   const [selectedCategory, setSelectedCategory] = React.useState<NodeCategory>('triggers');
   const [searchQuery, setSearchQuery] = React.useState('');
 
@@ -178,7 +179,6 @@ const NodeLibrary: React.FC<NodeLibraryProps> = ({ onNodeAdd }) => {
             className={styles.nodeItem}
             draggable
             onDragStart={(e) => handleNodeDragStart(e, node.type)}
-            onClick={() => handleNodeAdd(node.type)}
           >
             <div 
               className={styles.nodeIcon}
@@ -186,10 +186,22 @@ const NodeLibrary: React.FC<NodeLibraryProps> = ({ onNodeAdd }) => {
             >
               {node.icon}
             </div>
-            <div className={styles.nodeInfo}>
+            <div className={styles.nodeInfo} onClick={() => handleNodeAdd(node.type)}>
               <div className={styles.nodeName}>{node.name}</div>
               <div className={styles.nodeDescription}>{node.description}</div>
             </div>
+            {onNodeHelpRequest && (
+              <button
+                className={styles.helpButton}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onNodeHelpRequest(node.type);
+                }}
+                title="Справка по узлу"
+              >
+                ❓
+              </button>
+            )}
           </div>
         ))}
       </div>

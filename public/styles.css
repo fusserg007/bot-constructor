@@ -208,6 +208,7 @@ body {
     border-right: 1px solid #e1e8ed;
     padding: 1rem;
     overflow-y: auto;
+    overscroll-behavior: contain;
 }
 
 .center-panel {
@@ -222,6 +223,8 @@ body {
     border-left: 1px solid #e1e8ed;
     display: flex;
     flex-direction: column;
+    overflow-y: auto;
+    overscroll-behavior: contain;
 }
 
 /* Canvas */
@@ -308,6 +311,7 @@ body {
     flex: 1;
     padding: 1rem;
     overflow-y: auto;
+    overscroll-behavior: contain;
 }
 
 .tab-content.active {
@@ -514,4 +518,81 @@ body {
     .bots-grid {
         grid-template-columns: 1fr;
     }
+}
+/* Исправления для отображения схемы */
+.view {
+    display: none;
+}
+
+.view.active {
+    display: block !important;
+}
+
+.canvas-container {
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    background: #fff;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+#editorCanvas {
+    display: block;
+    cursor: crosshair;
+    background: #fafafa;
+}
+
+#editorCanvas:hover {
+    background: #f5f5f5;
+}
+
+/* Исправления для кнопки "Назад" */
+.constructor-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 20px;
+    background: #f8f9fa;
+    border-bottom: 1px solid #dee2e6;
+    margin-bottom: 20px;
+}
+
+.constructor-header .btn {
+    margin-right: 10px;
+}
+
+.constructor-header .btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+/* Улучшения для нодов */
+.node-item {
+    transition: all 0.2s ease;
+}
+
+.node-item:hover {
+    background: #e3f2fd;
+    transform: translateX(5px);
+}/* Исправл
+ения для навигации */
+.view {
+    display: none;
+}
+
+.view.active {
+    display: block !important;
+}
+
+/* Исправления для canvas */
+#editorCanvas {
+    border: 1px solid #ddd;
+    background: #fafafa;
+}
+
+.canvas-container {
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    background: #fff;
+    overflow: hidden;
 }

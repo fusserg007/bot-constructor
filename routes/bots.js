@@ -112,8 +112,8 @@ router.post('/', async (req, res) => {
       });
     }
 
-    // Проверяем уникальность токена
-    const isUnique = await tokenManager.checkTokenUniqueness(token, req.user.telegramId.toString());
+    // Проверяем уникальность токена (авторизация отключена)
+    const isUnique = await tokenManager.checkTokenUniqueness(token, 'admin');
     if (!isUnique) {
       return res.status(400).json({
         success: false,
@@ -153,7 +153,7 @@ router.post('/', async (req, res) => {
       messengerType: messenger,
       token: token,
       description: description || '',
-      userId: req.user.telegramId,
+      userId: 'admin', // Авторизация отключена
       status: 'inactive',
       useVisualEditor: useVisualEditor || false,
       visualSchemaId: null,
@@ -166,7 +166,7 @@ router.post('/', async (req, res) => {
     };
 
     // Резервируем токен
-    await tokenManager.reserveToken(token, req.user.telegramId.toString(), botId);
+    await tokenManager.reserveToken(token, 'admin', botId);
 
     // Сохраняем бота
     const botsDir = path.join(__dirname, '..', 'data', 'bots');
@@ -205,17 +205,11 @@ router.put('/:id', async (req, res) => {
     const botData = await fs.readFile(botPath, 'utf8');
     const bot = JSON.parse(botData);
 
-    // Проверяем, что бот принадлежит пользователю
-    if (bot.userId !== req.user.telegramId) {
-      return res.status(403).json({
-        success: false,
-        error: 'Нет доступа к этому боту'
-      });
-    }
+    // Авторизация отключена - пропускаем проверку доступа
 
     // Если обновляется токен, проверяем его уникальность
     if (updates.token && updates.token !== bot.token) {
-      const isUnique = await tokenManager.checkTokenUniqueness(updates.token, req.user.telegramId.toString(), botId);
+      const isUnique = await tokenManager.checkTokenUniqueness(updates.token, 'admin', botId);
       if (!isUnique) {
         return res.status(400).json({
           success: false,
@@ -234,7 +228,7 @@ router.put('/:id', async (req, res) => {
 
       // Освобождаем старый токен и резервируем новый
       await tokenManager.releaseToken(bot.token);
-      await tokenManager.reserveToken(updates.token, req.user.telegramId.toString(), botId);
+      await tokenManager.reserveToken(updates.token, 'admin', botId);
       
       // Обновляем username из Telegram API
       bot.username = validation.botInfo.username;
@@ -303,12 +297,7 @@ router.delete('/:id', async (req, res) => {
     const botData = await fs.readFile(botPath, 'utf8');
     const bot = JSON.parse(botData);
 
-    if (bot.userId !== req.user.telegramId) {
-      return res.status(403).json({
-        success: false,
-        error: 'Нет доступа к этому боту'
-      });
-    }
+    // Авторизация отключена - пропускаем проверку доступа
 
     // Освобождаем токен
     await tokenManager.releaseToken(bot.token);
@@ -456,7 +445,7 @@ router.post('/validate-token', async (req, res) => {
     }
 
     // Проверяем уникальность токена
-    const isUnique = await tokenManager.checkTokenUniqueness(token, req.user.telegramId.toString());
+    const isUnique = await tokenManager.checkTokenUniqueness(token, 'admin');
     
     // Валидируем токен через Telegram API
     const validation = await tokenManager.validateTokenWithTelegram(token);
@@ -510,12 +499,7 @@ router.post('/:id/visual-schema', async (req, res) => {
     const botData = await fs.readFile(botPath, 'utf8');
     const bot = JSON.parse(botData);
 
-    if (bot.userId !== req.user.telegramId) {
-      return res.status(403).json({
-        success: false,
-        error: 'Нет доступа к этому боту'
-      });
-    }
+    // Авторизация отключена - пропускаем проверку доступа
 
     // Создаем визуальную схему
     const schemaId = Date.now().toString();
@@ -567,12 +551,7 @@ router.get('/:id/visual-schema', async (req, res) => {
     const botData = await fs.readFile(botPath, 'utf8');
     const bot = JSON.parse(botData);
 
-    if (bot.userId !== req.user.telegramId) {
-      return res.status(403).json({
-        success: false,
-        error: 'Нет доступа к этому боту'
-      });
-    }
+    // Авторизация отключена - пропускаем проверку доступа
 
     if (!bot.visualSchemaId) {
       return res.status(404).json({
@@ -618,12 +597,7 @@ router.put('/:id/visual-schema', async (req, res) => {
     const botData = await fs.readFile(botPath, 'utf8');
     const bot = JSON.parse(botData);
 
-    if (bot.userId !== req.user.telegramId) {
-      return res.status(403).json({
-        success: false,
-        error: 'Нет доступа к этому боту'
-      });
-    }
+    // Авторизация отключена - пропускаем проверку доступа
 
     if (!bot.visualSchemaId) {
       return res.status(404).json({
@@ -673,12 +647,7 @@ router.post('/:id/convert-schema', async (req, res) => {
     const botData = await fs.readFile(botPath, 'utf8');
     const bot = JSON.parse(botData);
 
-    if (bot.userId !== req.user.telegramId) {
-      return res.status(403).json({
-        success: false,
-        error: 'Нет доступа к этому боту'
-      });
-    }
+    // Авторизация отключена - пропускаем проверку доступа
 
     if (!bot.visualSchemaId) {
       return res.status(404).json({
@@ -727,12 +696,7 @@ router.post('/:id/migrate-to-visual', async (req, res) => {
     const botData = await fs.readFile(botPath, 'utf8');
     const bot = JSON.parse(botData);
 
-    if (bot.userId !== req.user.telegramId) {
-      return res.status(403).json({
-        success: false,
-        error: 'Нет доступа к этому боту'
-      });
-    }
+    // Авторизация отключена - пропускаем проверку доступа
 
     if (bot.visualSchemaId) {
       return res.status(400).json({
@@ -800,12 +764,7 @@ router.post('/:id/reload', async (req, res) => {
     const botData = await fs.readFile(botPath, 'utf8');
     const bot = JSON.parse(botData);
 
-    if (bot.userId !== req.user.telegramId) {
-      return res.status(403).json({
-        success: false,
-        error: 'Нет доступа к этому боту'
-      });
-    }
+    // Авторизация отключена - пропускаем проверку доступа
 
     // Перезагружаем бота в runtime (если он активен)
     const BotRuntime = require('../utils/BotRuntime');

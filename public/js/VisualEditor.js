@@ -43,8 +43,8 @@ class VisualEditor {
         this.schema = options.schema || null; // Информация о схеме (id, name и т.д.)
         this.lastSyncTime = null;
         
-        // Настройки валидации
-        this.validationEnabled = options.validation !== false;
+        // Настройки валидации (отключена по умолчанию)
+        this.validationEnabled = options.validation === true;
         this.validationResults = null;
         this.onValidationChange = options.onValidationChange || null;
         
@@ -323,6 +323,11 @@ class VisualEditor {
     }
 
     onWheel(event) {
+        // Проверяем, что событие происходит именно на canvas, а не на панелях
+        if (event.target !== this.canvas) {
+            return; // Позволяем прокрутку панелей
+        }
+        
         event.preventDefault();
         
         const scaleFactor = event.deltaY > 0 ? 0.9 : 1.1;

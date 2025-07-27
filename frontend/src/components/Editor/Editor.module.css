@@ -73,6 +73,34 @@
   cursor: not-allowed;
 }
 
+.helpButton {
+  background: #6c757d;
+  color: white;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: background-color 0.2s;
+}
+
+.helpButton:hover {
+  background-color: #5a6268;
+}
+
+.helpPanel {
+  position: fixed;
+  top: 80px;
+  right: 20px;
+  width: 400px;
+  height: calc(100vh - 100px);
+  z-index: 1000;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  overflow: hidden;
+}
+
 .editorContent {
   flex: 1;
   display: flex;

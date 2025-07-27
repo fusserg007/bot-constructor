@@ -1,115 +1,215 @@
+/**
+ * API роуты для работы с шаблонами ботов
+ */
 const express = require('express');
 const router = express.Router();
-const fs = require('fs').promises;
-const path = require('path');
-const { v4: uuidv4 } = require('uuid');
-const TemplateManager = require('../utils/TemplateManager');
-// Убираем авторизацию для админской панели
 
-// Инициализация менеджера шаблонов
-const templateManager = new TemplateManager();
+// Временная заглушка для TemplateService (будет заменена на реальную реализацию)
+class TemplateService {
+  async getAllTemplates() {
+    return [
+      {
+        id: 'welcome-bot',
+        name: 'Приветственный бот',
+        description: 'Простой бот для приветствия новых пользователей',
+        category: 'business',
+        tags: ['приветствие', 'начинающий'],
+        difficulty: 'beginner',
+        platforms: ['telegram', 'discord'],
+        preview: {
+          features: ['Приветствие пользователей', 'Базовые команды', 'Справочная система']
+        },
+        author: 'Bot Constructor Team',
+        version: '1.0.0',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      },
+      {
+        id: 'faq-bot',
+        name: 'FAQ бот',
+        description: 'Бот для автоматических ответов на частые вопросы',
+        category: 'support',
+        tags: ['faq', 'поддержка'],
+        difficulty: 'intermediate',
+        platforms: ['telegram'],
+        preview: {
+          features: ['Автоответы на FAQ', 'База знаний', 'Эскалация к операторам']
+        },
+        author: 'Bot Constructor Team',
+        version: '1.0.0',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      }
+    ];
+  }
 
-// Используем настоящий middleware авторизации
+  async getTemplate(id) {
+    const templates = await this.getAllTemplates();
+    return templates.find(t => t.id === id) || null;
+  }
 
-// GET /api/templates - получение списка шаблонов
+  async getTemplatesByCategory(category) {
+    const templates = await this.getAllTemplates();
+    return templates.filter(t => t.category === category);
+  }
+
+  async searchTemplates(query, filters = {}) {
+    let templates = await this.getAllTemplates();
+    
+    if (query) {
+      const searchQuery = query.toLowerCase();
+      templates = templates.filter(t => 
+        t.name.toLowerCase().includes(searchQuery) ||
+        t.description.toLowerCase().includes(searchQuery) ||
+        t.tags.some(tag => tag.toLowerCase().includes(searchQuery))
+      );
+    }
+
+    if (filters.category) {
+      templates = templates.filter(t => t.category === filters.category);
+    }
+
+    if (filters.difficulty) {
+      templates = templates.filter(t => t.difficulty === filters.difficulty);
+    }
+
+    if (filters.platform) {
+      templates = templates.filter(t => t.platforms.includes(filters.platform));
+    }
+
+    return templates;
+  }
+
+  async getCategories() {
+    return [
+      {
+        id: 'business',
+        name: 'Бизнес',
+        description: 'Шаблоны для бизнес-процессов',
+        icon: '💼',
+        templates: []
+      },
+      {
+        id: 'support',
+        name: 'Поддержка',
+        description: 'Боты для клиентской поддержки',
+        icon: '🎧',
+        templates: []
+      },
+      {
+        id: 'education',
+        name: 'Образование',
+        description: 'Обучающие боты и квизы',
+        icon: '📚',
+        templates: []
+      },
+      {
+        id: 'ecommerce',
+        name: 'Электронная коммерция',
+        description: 'Боты для интернет-магазинов',
+        icon: '🛒',
+        templates: []
+      }
+    ];
+  }
+
+  async createBotFromTemplate(templateId, botName) {
+    const template = await this.getTemplate(templateId);
+    if (!template) return null;
+
+    return {
+      id: `bot_${Date.now()}`,
+      name: botName,
+      nodes: template.schema?.nodes || [],
+      edges: template.schema?.edges || [],
+      variables: template.schema?.variables || {},
+      settings: {
+        ...template.schema?.settings,
+        name: botName
+      },
+      version: '1.0.0',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+  }
+}
+
+const templateService = new TemplateService();
+
+/**
+ * GET /api/templates
+ * Получить все шаблоны
+ */
 router.get('/', async (req, res) => {
   try {
-    const { category, search, popular } = req.query;
+    const { category, difficulty, platform, search } = req.query;
     
     let templates;
-    
     if (search) {
-      templates = await templateManager.searchTemplates(search);
-      const categorizedTemplates = templates.reduce((acc, template) => {
-        if (!acc[template.category]) {
-          acc[template.category] = [];
-        }
-        acc[template.category].push(template);
-        return acc;
-      }, {});
+      templates = await templateService.searchTemplates(search, {
+        category,
+        difficulty,
+        platform
+      });
+    } else {
+      templates = await templateService.getAllTemplates();
       
-      return res.json({
-        success: true,
-        data: {
-          templates: categorizedTemplates,
-          total: templates.length,
-          searchQuery: search
-        }
-      });
-    }
-    
-    if (popular) {
-      templates = await templateManager.getPopularTemplates(parseInt(popular) || 5);
-      return res.json({
-        success: true,
-        data: {
-          templates: templates,
-          total: templates.length,
-          type: 'popular'
-        }
-      });
-    }
-    
-    if (category) {
-      const allTemplates = await templateManager.getTemplatesByCategory();
-      const categoryTemplates = allTemplates[category] || [];
-      
-      return res.json({
-        success: true,
-        data: {
-          templates: { [category]: categoryTemplates },
-          total: categoryTemplates.length,
-          category: category
-        }
-      });
-    }
-
-    // Получаем все шаблоны, сгруппированные по категориям
-    const categorizedTemplates = await templateManager.getTemplatesByCategory();
-    const totalCount = Object.values(categorizedTemplates).reduce((sum, arr) => sum + arr.length, 0);
-
-    res.json({
-      success: true,
-      data: {
-        templates: categorizedTemplates,
-        total: totalCount
+      // Применяем фильтры
+      if (category) {
+        templates = templates.filter(t => t.category === category);
       }
-    });
+      if (difficulty) {
+        templates = templates.filter(t => t.difficulty === difficulty);
+      }
+      if (platform) {
+        templates = templates.filter(t => t.platforms.includes(platform));
+      }
+    }
 
+    res.json({
+      success: true,
+      templates,
+      total: templates.length
+    });
   } catch (error) {
-    console.error('Ошибка получения шаблонов:', error);
+    console.error('Error getting templates:', error);
     res.status(500).json({
       success: false,
-      error: 'Ошибка получения списка шаблонов'
+      error: 'Ошибка получения шаблонов'
     });
   }
 });
 
-// GET /api/templates/stats - получение статистики по шаблонам
-router.get('/stats', async (req, res) => {
+/**
+ * GET /api/templates/categories
+ * Получить все категории шаблонов
+ */
+router.get('/categories', async (req, res) => {
   try {
-    const stats = await templateManager.getTemplateStats();
+    const categories = await templateService.getCategories();
     
     res.json({
       success: true,
-      data: stats
+      categories
     });
-
   } catch (error) {
-    console.error('Ошибка получения статистики шаблонов:', error);
+    console.error('Error getting categories:', error);
     res.status(500).json({
       success: false,
-      error: 'Ошибка получения статистики'
+      error: 'Ошибка получения категорий'
     });
   }
 });
 
-// GET /api/templates/:id - получение конкретного шаблона
+/**
+ * GET /api/templates/:id
+ * Получить конкретный шаблон
+ */
 router.get('/:id', async (req, res) => {
   try {
-    const templateId = req.params.id;
-    const template = await templateManager.getTemplate(templateId);
-
+    const { id } = req.params;
+    const template = await templateService.getTemplate(id);
+    
     if (!template) {
       return res.status(404).json({
         success: false,
@@ -119,11 +219,10 @@ router.get('/:id', async (req, res) => {
 
     res.json({
       success: true,
-      data: template
+      template
     });
-
   } catch (error) {
-    console.error('Ошибка получения шаблона:', error);
+    console.error('Error getting template:', error);
     res.status(500).json({
       success: false,
       error: 'Ошибка получения шаблона'
@@ -131,85 +230,95 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-// POST /api/templates/:id/apply - применение шаблона к боту
-router.post('/:id/apply', async (req, res) => {
+/**
+ * POST /api/templates/:id/clone
+ * Создать бота из шаблона
+ */
+router.post('/:id/clone', async (req, res) => {
   try {
-    const templateId = req.params.id;
-    const { botName, customizations = {} } = req.body;
-    
-    if (!botName) {
+    const { id } = req.params;
+    const { name } = req.body;
+
+    if (!name) {
       return res.status(400).json({
         success: false,
-        error: 'Не указано имя бота'
+        error: 'Название бота обязательно'
       });
     }
 
-    // Загружаем шаблон через TemplateManager
-    const template = await templateManager.getTemplate(templateId);
+    const botSchema = await templateService.createBotFromTemplate(id, name);
     
-    if (!template) {
+    if (!botSchema) {
       return res.status(404).json({
         success: false,
         error: 'Шаблон не найден'
       });
     }
 
-    // Проверяем доступ к премиум шаблонам
-    if (template.isPremium && req.user.subscription.plan === 'free') {
-      return res.status(403).json({
-        success: false,
-        error: 'Для использования этого шаблона требуется премиум подписка'
-      });
-    }
-
-    // Создаем нового бота на основе шаблона
-    const botId = uuidv4();
-    const newBot = {
-      id: botId,
-      userId: req.user.telegramId,
-      name: botName,
-      description: template.description,
-      token: '', // Будет заполнен пользователем позже
-      status: 'draft',
-      configuration: {
-        ...template.configuration,
-        // Применяем кастомизации
-        ...customizations
-      },
-      template: {
-        id: template.id,
-        category: template.category,
-        customizations: customizations
-      },
-      stats: {
-        messagesProcessed: 0,
-        activeUsers: 0,
-        lastActivity: null
-      },
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    };
-
-    // Сохраняем бота
-    const botPath = path.join(__dirname, '..', 'data', 'bots', `bot_${botId}.json`);
-    await fs.writeFile(botPath, JSON.stringify(newBot, null, 2));
-
-    // Обновляем статистику использования шаблона через TemplateManager
-    await templateManager.updateTemplateUsage(templateId);
-
     res.json({
       success: true,
-      data: {
-        botId: botId,
-        message: 'Бот успешно создан на основе шаблона'
-      }
+      bot: botSchema,
+      message: 'Бот успешно создан из шаблона'
     });
-
   } catch (error) {
-    console.error('Ошибка применения шаблона:', error);
+    console.error('Error cloning template:', error);
     res.status(500).json({
       success: false,
       error: 'Ошибка создания бота из шаблона'
+    });
+  }
+});
+
+/**
+ * GET /api/templates/category/:category
+ * Получить шаблоны по категории
+ */
+router.get('/category/:category', async (req, res) => {
+  try {
+    const { category } = req.params;
+    const templates = await templateService.getTemplatesByCategory(category);
+    
+    res.json({
+      success: true,
+      templates,
+      category,
+      total: templates.length
+    });
+  } catch (error) {
+    console.error('Error getting templates by category:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Ошибка получения шаблонов по категории'
+    });
+  }
+});
+
+/**
+ * GET /api/templates/search/:query
+ * Поиск шаблонов
+ */
+router.get('/search/:query', async (req, res) => {
+  try {
+    const { query } = req.params;
+    const { category, difficulty, platform } = req.query;
+    
+    const templates = await templateService.searchTemplates(query, {
+      category,
+      difficulty,
+      platform
+    });
+    
+    res.json({
+      success: true,
+      templates,
+      query,
+      total: templates.length
+    });
+  } catch (error) {
+    console.error('Error searching templates:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Ошибка поиска шаблонов'
     });
   }
 });

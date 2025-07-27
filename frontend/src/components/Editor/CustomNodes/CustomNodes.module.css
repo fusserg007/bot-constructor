@@ -131,6 +131,62 @@
   border-left: 4px solid #f59e0b;
 }
 
+.dataNode {
+  border-left: 4px solid #8b5cf6;
+}
+
+.integrationNode {
+  border-left: 4px solid #f97316;
+}
+
+.scenarioNode {
+  border-left: 4px solid #06b6d4;
+}
+
+/* Специализированные узлы */
+.commandTriggerNode {
+  border-left: 4px solid #1d4ed8;
+}
+
+.mediaActionNode {
+  border-left: 4px solid #059669;
+}
+
+.textConditionNode {
+  border-left: 4px solid #d97706;
+}
+
+/* Стили для кода и паттернов */
+.commandText {
+  background-color: #f3f4f6;
+  padding: 2px 4px;
+  border-radius: 3px;
+  font-family: 'Courier New', monospace;
+  font-size: 11px;
+  color: #374151;
+}
+
+.patternText {
+  background-color: #fef3c7;
+  padding: 2px 4px;
+  border-radius: 3px;
+  font-family: 'Courier New', monospace;
+  font-size: 11px;
+  color: #92400e;
+}
+
+/* Описание узла */
+.nodeDescription {
+  font-size: 10px;
+  color: #6b7280;
+  margin-top: 2px;
+  font-style: italic;
+  max-width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 /* Responsive adjustments */
 @media (max-width: 768px) {
   .customNode {

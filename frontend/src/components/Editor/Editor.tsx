@@ -16,10 +16,11 @@ import 'reactflow/dist/style.css';
 import NodeLibrary from './NodeLibrary/NodeLibrary';
 import PropertyPanel from './PropertyPanel/PropertyPanel';
 import ValidationPanel from './ValidationPanel/ValidationPanel';
+import HelpSystem from '../Help/HelpSystem';
 import { nodeTypes } from './CustomNodes';
 import { validateConnection } from '../../utils/nodeValidation';
-import { schemaValidator } from '../../utils/schemaValidator';
-import type { BotSchema } from '../../types/flow';
+import { SchemaValidator } from '../../utils/SchemaValidator';
+import { convertLegacyToReactFlow, isLegacyFormat } from '../../utils/dataConverter';
 import { useApp } from '../../context/AppContext';
 import styles from './Editor.module.css';
 
@@ -45,7 +46,9 @@ const Editor: React.FC = () => {
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
   const [selectedNode, setSelectedNode] = useState<Node | null>(null);
-  const [validationResult, setValidationResult] = useState<{ errors: any[], warnings: any[] }>({ errors: [], warnings: [] });
+  const [isValidationPanelVisible, setIsValidationPanelVisible] = useState(false);
+  const [isHelpPanelVisible, setIsHelpPanelVisible] = useState(false);
+  const [validationResult, setValidationResult] = useState({ errors: [], warnings: [] });
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
   const [reactFlowInstance, setReactFlowInstance] = useState<any>(null);
 
@@ -59,40 +62,34 @@ const Editor: React.FC = () => {
   // Обновляем узлы и ребра когда загружается бот
   React.useEffect(() => {
     if (state.currentBot?.configuration) {
-      if (state.currentBot.configuration.nodes) {
-        setNodes(state.currentBot.configuration.nodes);
-      }
-      if (state.currentBot.configuration.edges) {
-        setEdges(state.currentBot.configuration.edges);
+      // Проверяем, является ли конфигурация старым форматом
+      if (isLegacyFormat(state.currentBot.configuration)) {
+        // Конвертируем из старого формата
+        const { nodes: convertedNodes, edges: convertedEdges } = convertLegacyToReactFlow(state.currentBot.configuration);
+        setNodes(convertedNodes);
+        setEdges(convertedEdges);
+      } else {
+        // Используем новый формат как есть
+        if (state.currentBot.configuration.nodes) {
+          setNodes(state.currentBot.configuration.nodes);
+        }
+        if (state.currentBot.configuration.edges) {
+          setEdges(state.currentBot.configuration.edges);
+        }
       }
     }
   }, [state.currentBot, setNodes, setEdges]);
 
-  // Функция валидации текущей схемы
-  const validateCurrentSchema = useCallback(() => {
-    const schema: BotSchema = {
-      id: botId || 'temp',
-      name: state.currentBot?.name || 'Временная схема',
-      description: state.currentBot?.description || '',
-      nodes,
-      edges,
-      variables: {},
-      settings: {}
-    };
-
-    const result = schemaValidator.validateSchema(schema);
-    setValidationResult({
-      errors: result.errors,
-      warnings: result.warnings
-    });
-  }, [nodes, edges, botId, state.currentBot]);
-
-  // Валидируем схему при изменении узлов или соединений
+  // Автоматически показываем панель валидации при наличии ошибок
   React.useEffect(() => {
-    if (nodes.length > 0 || edges.length > 0) {
-      validateCurrentSchema();
+    const validator = new SchemaValidator(nodes, edges);
+    const result = validator.validate();
+    setValidationResult(result);
+    
+    if (result.errors.length > 0 && !isValidationPanelVisible) {
+      setIsValidationPanelVisible(true);
     }
-  }, [nodes, edges, validateCurrentSchema]);
+  }, [nodes, edges, isValidationPanelVisible]);
 
   const onConnect = useCallback(
     (params: Connection) => {
@@ -180,37 +177,30 @@ const Editor: React.FC = () => {
 
   const handleSave = async () => {
     // Валидируем схему перед сохранением с помощью новой системы валидации
-    const schema: BotSchema = {
-      id: botId || 'temp',
-      name: state.currentBot?.name || (botId ? 'Обновленный бот' : 'Новый бот'),
-      description: state.currentBot?.description || 'Создан в визуальном редакторе',
-      nodes,
-      edges,
-      variables: state.currentBot?.configuration?.variables || {},
-      settings: state.currentBot?.configuration?.settings || {}
-    };
-
-    const validation = schemaValidator.validateSchema(schema);
+    const validator = new SchemaValidator(nodes, edges);
+    const validation = validator.validate();
     
     if (!validation.isValid) {
       const errorMessages = validation.errors.map(e => `• ${e.message}`).join('\n');
       alert(`Ошибки в схеме:\n${errorMessages}`);
+      setIsValidationPanelVisible(true);
       return;
     }
 
     // Показываем предупреждения, но позволяем сохранить
-    if (validation.hasWarnings) {
+    if (validation.warnings.length > 0) {
       const warningMessages = validation.warnings.map(w => `• ${w.message}`).join('\n');
       const proceed = confirm(`Предупреждения в схеме:\n${warningMessages}\n\nПродолжить сохранение?`);
       if (!proceed) {
+        setIsValidationPanelVisible(true);
         return;
       }
     }
 
     const botData = {
       id: botId,
-      name: schema.name,
-      description: schema.description,
+      name: state.currentBot?.name || (botId ? 'Обновленный бот' : 'Новый бот'),
+      description: state.currentBot?.description || 'Создан в визуальном редакторе',
       status: state.currentBot?.status || 'draft' as const,
       configuration: {
         nodes: nodes.map(node => ({
@@ -226,8 +216,8 @@ const Editor: React.FC = () => {
           sourceHandle: edge.sourceHandle,
           targetHandle: edge.targetHandle
         })),
-        variables: schema.variables,
-        settings: schema.settings
+        variables: state.currentBot?.configuration?.variables || {},
+        settings: state.currentBot?.configuration?.settings || {}
       }
     };
 
@@ -250,6 +240,13 @@ const Editor: React.FC = () => {
           <h1>{botId ? 'Редактор бота' : 'Новый бот'}</h1>
         </div>
         <div className={styles.headerRight}>
+          <button 
+            onClick={() => setIsHelpPanelVisible(!isHelpPanelVisible)} 
+            className={styles.helpButton}
+            title="Справка"
+          >
+            ❓
+          </button>
           <button onClick={handleSave} className={styles.saveButton} disabled={state.loading}>
             {state.loading ? 'Сохранение...' : 'Сохранить'}
           </button>
@@ -266,6 +263,10 @@ const Editor: React.FC = () => {
               data: getDefaultNodeData(nodeType),
             };
             setNodes((nds) => nds.concat(newNode));
+          }}
+          onNodeHelpRequest={(nodeType) => {
+            setSelectedNode({ type: nodeType } as Node);
+            setIsHelpPanelVisible(true);
           }}
         />
 
@@ -302,10 +303,24 @@ const Editor: React.FC = () => {
         />
 
         {/* Панель валидации */}
-        <ValidationPanel
-          errors={validationResult.errors}
-          warnings={validationResult.warnings}
-        />
+        {isValidationPanelVisible && (
+          <ValidationPanel
+            errors={validationResult.errors}
+            warnings={validationResult.warnings}
+            onClose={() => setIsValidationPanelVisible(false)}
+          />
+        )}
+
+        {/* Панель справки */}
+        {isHelpPanelVisible && (
+          <div className={styles.helpPanel}>
+            <HelpSystem
+              selectedNodeType={selectedNode?.type}
+              onClose={() => setIsHelpPanelVisible(false)}
+              isVisible={isHelpPanelVisible}
+            />
+          </div>
+        )}
       </div>
     </div>
   );

@@ -1,0 +1,23 @@
+{
+  "name": "simple-test-bot",
+  "version": "1.0.0",
+  "description": "Базовый бот для тестирования с командой /start",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js"
+  },
+  "dependencies": {
+    "node-telegram-bot-api": "^0.61.0"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.22"
+  },
+  "keywords": [
+    "telegram",
+    "bot",
+    "chatbot"
+  ],
+  "author": "Bot Constructor",
+  "license": "MIT"
+}

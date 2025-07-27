@@ -1,0 +1,24 @@
+{
+  "botId": "simple-test-bot",
+  "timestamp": "2025-07-26T11:27:09.621Z",
+  "telegramIntegration": {
+    "botInfo": {
+      "id": 123456789,
+      "is_bot": true,
+      "first_name": "Test Bot",
+      "username": "test_simple_bot",
+      "can_join_groups": true,
+      "can_read_all_group_messages": false,
+      "supports_inline_queries": false
+    },
+    "stats": {
+      "messagesReceived": 2,
+      "messagesSent": 2,
+      "errors": 0,
+      "startTime": "2025-07-26T11:26:58.588Z",
+      "uptime": "менее минуты",
+      "isRunning": false
+    },
+    "success": true
+  }
+}
