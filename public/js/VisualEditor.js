@@ -90,6 +90,8 @@ class VisualEditor {
         // Обработчики drag-and-drop
         this.canvas.addEventListener('dragover', this.onDragOver.bind(this));
         this.canvas.addEventListener('drop', this.onDrop.bind(this));
+        this.canvas.addEventListener('dragenter', this.onDragEnter.bind(this));
+        this.canvas.addEventListener('dragleave', this.onDragLeave.bind(this));
         
         // Предотвращение контекстного меню
         this.canvas.addEventListener('contextmenu', (e) => e.preventDefault());
@@ -254,6 +256,7 @@ class VisualEditor {
         if (event.button === 0) { // Левая кнопка мыши
             if (node) {
                 this.selectedNode = node.id;
+                this.canvas.style.cursor = 'grab';
                 this.dragState = {
                     nodeId: node.id,
                     startPos: worldPos,
@@ -261,6 +264,7 @@ class VisualEditor {
                 };
             } else {
                 this.selectedNode = null;
+                this.canvas.style.cursor = 'default';
             }
         } else if (event.button === 2) { // Правая кнопка мыши
             if (node) {
@@ -282,6 +286,8 @@ class VisualEditor {
             // Перетаскивание узла
             const node = this.nodes.get(this.dragState.nodeId);
             if (node) {
+                this.canvas.style.cursor = 'grabbing';
+                
                 const deltaX = worldPos.x - this.dragState.startPos.x;
                 const deltaY = worldPos.y - this.dragState.startPos.y;
                 
@@ -319,6 +325,7 @@ class VisualEditor {
         }
 
         this.dragState = null;
+        this.canvas.style.cursor = 'default';
         this.render();
     }
 
@@ -363,6 +370,7 @@ class VisualEditor {
         this.drawConnections();
         this.drawNodes();
         this.drawTemporaryConnection();
+        this.drawDragPreview();
         
         this.ctx.restore();
     }
@@ -553,6 +561,36 @@ class VisualEditor {
         this.ctx.setLineDash([]);
     }
 
+    drawDragPreview() {
+        if (!this.dragPreviewPos) return;
+        
+        // Рисуем полупрозрачный прямоугольник в позиции предварительного размещения
+        const x = this.dragPreviewPos.x - 50;
+        const y = this.dragPreviewPos.y - 25;
+        const width = 100;
+        const height = 50;
+        
+        this.ctx.save();
+        this.ctx.globalAlpha = 0.5;
+        this.ctx.strokeStyle = '#007bff';
+        this.ctx.fillStyle = '#e3f2fd';
+        this.ctx.lineWidth = 2;
+        this.ctx.setLineDash([5, 5]);
+        
+        this.ctx.fillRect(x, y, width, height);
+        this.ctx.strokeRect(x, y, width, height);
+        
+        // Добавляем текст "Drop here"
+        this.ctx.globalAlpha = 0.8;
+        this.ctx.fillStyle = '#007bff';
+        this.ctx.font = '12px Arial';
+        this.ctx.textAlign = 'center';
+        this.ctx.fillText('Drop here', x + width/2, y + height/2 + 4);
+        
+        this.ctx.setLineDash([]);
+        this.ctx.restore();
+    }
+
     drawArrow(x, y, angle, color = '#666666') {
         const arrowLength = 10;
         const arrowAngle = Math.PI / 6;
@@ -628,13 +666,34 @@ class VisualEditor {
     }
 
     // Обработка drag-and-drop из библиотеки узлов
+    onDragEnter(event) {
+        event.preventDefault();
+        // Добавляем визуальную обратную связь при входе в зону drop
+        this.canvas.style.backgroundColor = '#f0f8ff';
+    }
+
+    onDragLeave(event) {
+        event.preventDefault();
+        // Убираем визуальную обратную связь при выходе из зоны drop
+        this.canvas.style.backgroundColor = '#f8f9fa';
+    }
+
     onDragOver(event) {
         event.preventDefault();
         event.dataTransfer.dropEffect = 'copy';
+        
+        // Показываем предварительную позицию узла
+        const worldPos = this.screenToWorld(event.clientX, event.clientY);
+        this.dragPreviewPos = worldPos;
+        this.render();
     }
 
     onDrop(event) {
         event.preventDefault();
+        
+        // Убираем визуальную обратную связь
+        this.canvas.style.backgroundColor = '#f8f9fa';
+        this.dragPreviewPos = null;
         
         const nodeType = event.dataTransfer.getData('text/plain');
         if (!nodeType) return;
@@ -689,10 +748,68 @@ class VisualEditor {
     // Методы сохранения и загрузки схем
 
     /**
+     * Валидирует текущую схему перед сериализацией
+     * @returns {Object} - Результат валидации
+     */
+    validateSchemaForSave() {
+        const errors = [];
+        const warnings = [];
+        
+        // Проверяем узлы
+        for (const [nodeId, node] of this.nodes) {
+            if (!node.type) {
+                errors.push(`Node ${nodeId} missing type`);
+            }
+            
+            if (!node.position || typeof node.position.x !== 'number' || typeof node.position.y !== 'number') {
+                errors.push(`Node ${nodeId} has invalid position`);
+            }
+            
+            // Проверяем, что тип узла существует в библиотеке
+            if (this.nodeLibrary && !this.nodeLibrary.getNodeType(node.type)) {
+                warnings.push(`Node ${nodeId} has unknown type: ${node.type}`);
+            }
+        }
+        
+        // Проверяем соединения
+        for (const [connectionId, connection] of this.connections) {
+            if (!connection.sourceNodeId || !connection.targetNodeId) {
+                errors.push(`Connection ${connectionId} missing source or target node`);
+            }
+            
+            if (!this.nodes.has(connection.sourceNodeId)) {
+                errors.push(`Connection ${connectionId} references non-existent source node: ${connection.sourceNodeId}`);
+            }
+            
+            if (!this.nodes.has(connection.targetNodeId)) {
+                errors.push(`Connection ${connectionId} references non-existent target node: ${connection.targetNodeId}`);
+            }
+        }
+        
+        return {
+            isValid: errors.length === 0,
+            errors,
+            warnings
+        };
+    }
+
+    /**
      * Сериализует текущую схему в JSON
      * @returns {Object} - Объект схемы
      */
     serializeSchema() {
+        // Валидируем схему перед сериализацией
+        const validation = this.validateSchemaForSave();
+        
+        if (!validation.isValid) {
+            console.error('Schema validation failed:', validation.errors);
+            throw new Error(`Schema validation failed: ${validation.errors.join(', ')}`);
+        }
+        
+        if (validation.warnings.length > 0) {
+            console.warn('Schema validation warnings:', validation.warnings);
+        }
+        
         return {
             schemaVersion: '1.0.0',
             timestamp: new Date().toISOString(),
@@ -701,7 +818,11 @@ class VisualEditor {
             viewport: { ...this.viewport },
             metadata: {
                 nodeCount: this.nodes.size,
-                connectionCount: this.connections.size
+                connectionCount: this.connections.size,
+                validation: {
+                    isValid: validation.isValid,
+                    warnings: validation.warnings
+                }
             }
         };
     }
@@ -711,8 +832,13 @@ class VisualEditor {
      * @returns {string} - JSON строка схемы
      */
     saveSchema() {
-        const schema = this.serializeSchema();
-        return JSON.stringify(schema, null, 2);
+        try {
+            const schema = this.serializeSchema();
+            return JSON.stringify(schema, null, 2);
+        } catch (error) {
+            console.error('Error saving schema:', error);
+            throw new Error(`Failed to save schema: ${error.message}`);
+        }
     }
 
     /**
@@ -725,28 +851,70 @@ class VisualEditor {
             // Парсим JSON если передана строка
             const schema = typeof schemaData === 'string' ? JSON.parse(schemaData) : schemaData;
             
-            // Проверяем наличие необходимых полей
+            // Валидация схемы
+            if (!schema || typeof schema !== 'object') {
+                throw new Error('Invalid schema: not an object');
+            }
+            
             if (!schema.nodes || !Array.isArray(schema.nodes)) {
-                throw new Error('Invalid schema: missing nodes array');
+                throw new Error('Invalid schema: missing or invalid nodes array');
+            }
+            
+            // Проверяем версию схемы
+            if (schema.schemaVersion && schema.schemaVersion !== '1.0.0') {
+                console.warn(`Schema version ${schema.schemaVersion} may not be fully compatible`);
             }
             
             // Очищаем текущую схему
             this.clearSchema();
             
-            // Загружаем узлы
-            schema.nodes.forEach(node => {
-                this.nodes.set(node.id, { ...node });
+            // Загружаем узлы с валидацией
+            let loadedNodes = 0;
+            schema.nodes.forEach((node, index) => {
+                try {
+                    if (!node.id || !node.type) {
+                        console.warn(`Skipping invalid node at index ${index}:`, node);
+                        return;
+                    }
+                    
+                    // Проверяем, что тип узла существует в библиотеке
+                    if (this.nodeLibrary && !this.nodeLibrary.getNodeType(node.type)) {
+                        console.warn(`Unknown node type: ${node.type}, loading anyway`);
+                    }
+                    
+                    this.nodes.set(node.id, { ...node });
+                    loadedNodes++;
+                } catch (nodeError) {
+                    console.warn(`Error loading node at index ${index}:`, nodeError);
+                }
             });
             
-            // Загружаем соединения
+            // Загружаем соединения с валидацией
+            let loadedConnections = 0;
             if (schema.connections && Array.isArray(schema.connections)) {
-                schema.connections.forEach(connection => {
-                    this.connections.set(connection.id, { ...connection });
+                schema.connections.forEach((connection, index) => {
+                    try {
+                        if (!connection.id || !connection.sourceNodeId || !connection.targetNodeId) {
+                            console.warn(`Skipping invalid connection at index ${index}:`, connection);
+                            return;
+                        }
+                        
+                        // Проверяем, что узлы соединения существуют
+                        if (!this.nodes.has(connection.sourceNodeId) || !this.nodes.has(connection.targetNodeId)) {
+                            console.warn(`Skipping connection with missing nodes:`, connection);
+                            return;
+                        }
+                        
+                        this.connections.set(connection.id, { ...connection });
+                        loadedConnections++;
+                    } catch (connectionError) {
+                        console.warn(`Error loading connection at index ${index}:`, connectionError);
+                    }
                 });
             }
             
             // Загружаем настройки viewport
-            if (schema.viewport) {
+            if (schema.viewport && typeof schema.viewport === 'object') {
                 this.viewport = { ...this.viewport, ...schema.viewport };
             }
             
@@ -756,9 +924,14 @@ class VisualEditor {
             // Вызываем событие изменения
             this.triggerChange('load');
             
+            console.log(`Schema loaded successfully: ${loadedNodes} nodes, ${loadedConnections} connections`);
             return true;
+            
         } catch (error) {
             console.error('Error loading schema:', error);
+            
+            // В случае ошибки очищаем схему для предотвращения некорректного состояния
+            this.clearSchema();
             return false;
         }
     }

@@ -10,24 +10,48 @@ class BotConstructor {
         this.connections = [];
         this.currentView = 'dashboard';
         this.selectedNode = null;
+        
+        // Инициализируем логирование
+        this.logger = window.debugLogger || console;
+        this.logger.info?.('initialization', 'BotConstructor: Начало инициализации') || console.log('BotConstructor: Начало инициализации');
+        
         this.init();
+        
+        this.logger.info?.('initialization', 'BotConstructor: Инициализация завершена') || console.log('BotConstructor: Инициализация завершена');
     }
 
     init() {
-        console.log('🚀 Bot Constructor инициализирован');
-        this.setupEventListeners();
-        this.loadDashboardData();
-        this.initCanvas();
+        this.logger.info?.('initialization', 'BotConstructor.init: Запуск инициализации') || console.log('🚀 Bot Constructor инициализирован');
+        
+        try {
+            this.setupEventListeners();
+            this.logger.debug?.('initialization', 'Event listeners настроены') || console.log('Event listeners настроены');
+            
+            this.loadDashboardData();
+            this.logger.debug?.('initialization', 'Загрузка данных дашборда запущена') || console.log('Загрузка данных дашборда запущена');
+            
+            this.initCanvas();
+            this.logger.debug?.('initialization', 'Canvas инициализирован') || console.log('Canvas инициализирован');
+            
+            this.logger.info?.('initialization', 'BotConstructor.init: Инициализация завершена успешно') || console.log('BotConstructor.init: Инициализация завершена успешно');
+        } catch (error) {
+            this.logger.error?.('initialization', 'Ошибка в BotConstructor.init', error) || console.error('Ошибка в BotConstructor.init:', error);
+            throw error;
+        }
     }
 
     setupEventListeners() {
         // Глобальные функции для HTML
-        // Глобальные функции для HTML
         window.backToDashboard = () => {
             console.log('🔙 Возврат к дашборду');
+            console.log('🔍 Проверка window.botConstructor:', !!window.botConstructor);
             if (window.botConstructor) {
+                console.log('🔄 Вызов showView(dashboard)');
                 window.botConstructor.currentBot = null;
                 window.botConstructor.showView('dashboard');
+            } else {
+                console.error('❌ window.botConstructor не найден!');
+                alert('Ошибка: приложение не инициализировано');
             }
         };
         window.editBot = (botId) => this.editBot(botId);
@@ -38,6 +62,21 @@ class BotConstructor {
         window.validateCurrentSchema = () => this.validateSchema();
         window.showTab = (tabName) => this.showTab(tabName);
         window.copyCode = () => this.copyCode();
+        
+        // Диагностическая функция
+        window.debugApp = () => {
+            console.log('🔍 Диагностика приложения:');
+            console.log('- window.botConstructor:', !!window.botConstructor);
+            console.log('- currentBot:', window.botConstructor?.currentBot?.name);
+            console.log('- currentView:', window.botConstructor?.currentView);
+            console.log('- dashboard-view element:', !!document.getElementById('dashboard-view'));
+            console.log('- constructor-view element:', !!document.getElementById('constructor-view'));
+            console.log('- editorCanvas element:', !!document.getElementById('editorCanvas'));
+            
+            if (window.botConstructor?.currentBot) {
+                console.log('- nodes count:', window.botConstructor.currentBot.configuration?.nodes?.length);
+            }
+        };
         window.closeCodeModal = () => this.closeCodeModal();
 
         // Drag & Drop для узлов
@@ -416,7 +455,7 @@ class BotConstructor {
             
         } catch (error) {
             console.error('❌ Ошибка загрузки бота:', error);
-            this.showStatus(`Ошибка загрузки бота: ${error.message}`, 'error');
+            alert(`Ошибка загрузки бота: ${error.message}`);
         }
     }
 
@@ -898,33 +937,135 @@ class BotConstructor {
     }
 
     displayBotSchema() {
-        console.log('🎨 Отображение схемы бота...');
+        this.logger.info?.('schema', 'displayBotSchema: Начало отображения схемы') || console.log('🎨 Отображение схемы бота...');
         
         const canvas = document.getElementById('editorCanvas');
         if (!canvas) {
-            console.error('❌ Canvas не найден!');
+            this.logger.error?.('canvas', 'Canvas элемент не найден') || console.error('❌ Canvas не найден!');
             return;
         }
         
+        this.logger.debug?.('canvas', 'Canvas найден, очистка...') || console.log('Canvas найден, очистка...');
         const ctx = canvas.getContext('2d');
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         
         if (!this.currentBot || !this.currentBot.configuration || !this.currentBot.configuration.nodes) {
-            console.warn('⚠️ Нет данных для отображения схемы');
+            this.logger.warn?.('schema', 'Нет данных для отображения схемы') || console.warn('⚠️ Нет данных для отображения схемы');
             this.drawEmptySchema(ctx);
             return;
         }
         
         const nodes = this.currentBot.configuration.nodes;
-        console.log(`📊 Отображение ${nodes.length} нодов`);
+        this.logger.info?.('schema', `Отображение схемы: ${nodes.length} узлов`, {
+            botName: this.currentBot.name,
+            nodesCount: nodes.length
+        }) || console.log(`📊 Отображение ${nodes.length} нодов`);
         
-        // Отображаем все ноды
-        nodes.forEach((node, index) => {
-            this.drawSingleNode(ctx, node, index);
+        try {
+            // Отображаем все ноды
+            nodes.forEach((node, index) => {
+                this.logger.debug?.('schema', `Отрисовка узла ${index + 1}: ${node.id} (${node.type})`) || console.log(`Отрисовка узла ${index + 1}: ${node.id} (${node.type})`);
+                this.drawBotNode(ctx, node, index);
+            });
+            
+            // Отображаем связи
+            this.drawBotConnections(ctx, nodes);
+            
+            this.logger.info?.('schema', 'displayBotSchema: Схема отображена успешно') || console.log('✅ Схема отображена');
+        } catch (error) {
+            this.logger.error?.('schema', 'Ошибка при отображении схемы', error) || console.error('❌ Ошибка при отображении схемы:', error);
+        }
+    }
+
+    drawBotNode(ctx, node, index) {
+        // Позиция ноды
+        const x = node.position?.x || (50 + (index % 4) * 180);
+        const y = node.position?.y || (50 + Math.floor(index / 4) * 120);
+        
+        // Размеры ноды
+        const width = 150;
+        const height = 80;
+        
+        // Цвет фона в зависимости от типа
+        const colors = {
+            'trigger': '#e3f2fd',
+            'action': '#f3e5f5', 
+            'condition': '#fff3e0'
+        };
+        ctx.fillStyle = colors[node.type] || '#f5f5f5';
+        ctx.fillRect(x, y, width, height);
+        
+        // Рамка
+        ctx.strokeStyle = '#333';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(x, y, width, height);
+        
+        // Текст - ID ноды
+        ctx.fillStyle = '#000';
+        ctx.font = 'bold 12px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText(node.id || 'Unknown', x + width/2, y + 25);
+        
+        // Текст - тип ноды
+        ctx.font = '10px Arial';
+        ctx.fillText(`[${node.type}]`, x + width/2, y + 45);
+        
+        // Дополнительная информация
+        if (node.data?.command) {
+            ctx.fillText(node.data.command, x + width/2, y + 65);
+        } else if (node.data?.actionType) {
+            ctx.fillText(node.data.actionType, x + width/2, y + 65);
+        }
+    }
+
+    drawBotConnections(ctx, nodes) {
+        ctx.strokeStyle = '#666';
+        ctx.lineWidth = 2;
+        
+        nodes.forEach((node, fromIndex) => {
+            const fromX = (node.position?.x || (50 + (fromIndex % 4) * 180)) + 75;
+            const fromY = (node.position?.y || (50 + Math.floor(fromIndex / 4) * 120)) + 80;
+            
+            if (node.connections) {
+                let connections = [];
+                
+                // Обрабатываем разные форматы connections
+                if (Array.isArray(node.connections)) {
+                    connections = node.connections;
+                } else if (typeof node.connections === 'object') {
+                    // Для condition нодов
+                    Object.values(node.connections).forEach(connArray => {
+                        if (Array.isArray(connArray)) {
+                            connections = connections.concat(connArray);
+                        }
+                    });
+                }
+                
+                connections.forEach(targetId => {
+                    const targetIndex = nodes.findIndex(n => n.id === targetId);
+                    if (targetIndex >= 0) {
+                        const targetNode = nodes[targetIndex];
+                        const toX = (targetNode.position?.x || (50 + (targetIndex % 4) * 180)) + 75;
+                        const toY = (targetNode.position?.y || (50 + Math.floor(targetIndex / 4) * 120));
+                        
+                        // Рисуем стрелку
+                        ctx.beginPath();
+                        ctx.moveTo(fromX, fromY);
+                        ctx.lineTo(toX, toY);
+                        ctx.stroke();
+                        
+                        // Рисуем наконечник стрелки
+                        const angle = Math.atan2(toY - fromY, toX - fromX);
+                        ctx.beginPath();
+                        ctx.moveTo(toX, toY);
+                        ctx.lineTo(toX - 10 * Math.cos(angle - Math.PI/6), toY - 10 * Math.sin(angle - Math.PI/6));
+                        ctx.moveTo(toX, toY);
+                        ctx.lineTo(toX - 10 * Math.cos(angle + Math.PI/6), toY - 10 * Math.sin(angle + Math.PI/6));
+                        ctx.stroke();
+                    }
+                });
+            }
         });
-        
-        // Отображаем связи
-        this.drawNodeConnections(ctx, nodes);
     }
     
     drawSingleNode(ctx, node, index) {
@@ -1047,25 +1188,9 @@ window.deleteNode = function(nodeId) {
     }
 };
 
-// Экспортируем классы в глобальную область для отладки
+// Экспортируем класс в глобальную область для отладки
 window.BotConstructor = BotConstructor;
 
-// Экспортируем класс глобально для диагностики
-window.BotConstructor = BotConstructor;
-
-document.addEventListener('DOMContentLoaded', () => {
-    console.log('🚀 Инициализация Bot Constructor...');
-    try {
-        window.botConstructor = new BotConstructor();
-        console.log('✅ Bot Constructor успешно инициализирован');
-    } catch (error) {
-        console.error('❌ Ошибка инициализации Bot Constructor:', error);
-        // Показываем ошибку пользователю
-        const errorDiv = document.createElement('div');
-        errorDiv.style.cssText = 'position:fixed;top:10px;left:10px;background:red;color:white;padding:10px;z-index:9999;';
-        errorDiv.textContent = 'Ошибка загрузки приложения: ' + error.message;
-        document.body.appendChild(errorDiv);
-    }
-
-
-}
+// Инициализация теперь управляется BotConstructorManager
+// Старая логика заменена на надежную систему с повторными попытками
+console.log('🔧 Инициализация управляется BotConstructorManager');

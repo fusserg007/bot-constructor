@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Минимальный тест инициализации</title>
+</head>
+<body>
+    <h1>Тест инициализации</h1>
+    <div id="status">Загрузка...</div>
+    
+    <script>
+        console.log('=== НАЧАЛО ТЕСТА ===');
+        
+        // Проверяем до загрузки app.js
+        console.log('До app.js:', typeof window.BotConstructor);
+        
+        // Отслеживаем DOMContentLoaded
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('DOMContentLoaded сработал');
+            setTimeout(() => {
+                console.log('Проверка через 1 сек после DOMContentLoaded:');
+                console.log('- BotConstructor:', typeof window.BotConstructor);
+                console.log('- botConstructor:', typeof window.botConstructor);
+                console.log('- backToDashboard:', typeof window.backToDashboard);
+                
+                document.getElementById('status').innerHTML = 
+                    'BotConstructor: ' + typeof window.BotConstructor + '<br>' +
+                    'botConstructor: ' + typeof window.botConstructor + '<br>' +
+                    'backToDashboard: ' + typeof window.backToDashboard;
+            }, 1000);
+        });
+    </script>
+    
+    <script src="app.js"></script>
+    
+    <script>
+        // Проверяем сразу после загрузки app.js
+        console.log('После app.js:', typeof window.BotConstructor);
+        
+        setTimeout(() => {
+            console.log('=== ФИНАЛЬНАЯ ПРОВЕРКА ===');
+            console.log('BotConstructor:', typeof window.BotConstructor);
+            console.log('botConstructor:', typeof window.botConstructor);
+            console.log('backToDashboard:', typeof window.backToDashboard);
+        }, 3000);
+    </script>
+</body>
+</html>

@@ -113,15 +113,15 @@ body {
 /* Сетка ботов */
 .bots-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 1.5rem;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1rem;
 }
 
 .bot-card {
     background: white;
-    border-radius: 12px;
-    padding: 1.5rem;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    border-radius: 8px;
+    padding: 1rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
     border: 1px solid #e1e8ed;
     transition: all 0.3s ease;
     cursor: pointer;
@@ -140,10 +140,10 @@ body {
 }
 
 .bot-card-title {
-    font-size: 1.2rem;
+    font-size: 1rem;
     font-weight: bold;
     color: #2c3e50;
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.3rem;
 }
 
 .bot-status {
@@ -209,6 +209,8 @@ body {
     padding: 1rem;
     overflow-y: auto;
     overscroll-behavior: contain;
+    height: 100%;
+    max-height: calc(100vh - 80px);
 }
 
 .center-panel {
@@ -569,11 +571,23 @@ body {
 /* Улучшения для нодов */
 .node-item {
     transition: all 0.2s ease;
+    cursor: grab;
 }
 
 .node-item:hover {
     background: #e3f2fd;
     transform: translateX(5px);
+    box-shadow: 0 2px 8px rgba(0, 123, 255, 0.2);
+}
+
+.node-item.dragging {
+    opacity: 0.6;
+    transform: scale(0.95) rotate(2deg);
+    cursor: grabbing;
+}
+
+.node-item:active {
+    cursor: grabbing;
 }/* Исправл
 ения для навигации */
 .view {
@@ -595,4 +609,38 @@ body {
     border-radius: 8px;
     background: #fff;
     overflow: hidden;
+}
+/* Сти
+ли для drag-and-drop на canvas */
+.visual-canvas {
+    transition: background-color 0.2s ease;
+}
+
+.visual-canvas.drag-over {
+    background-color: #f0f8ff !important;
+    box-shadow: inset 0 0 10px rgba(0, 123, 255, 0.3);
+}
+
+/* Стили для предварительного отображения узла */
+.drag-preview {
+    position: absolute;
+    pointer-events: none;
+    background: rgba(227, 242, 253, 0.8);
+    border: 2px dashed #007bff;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    color: #007bff;
+    z-index: 1000;
+}
+
+/* Улучшения для курсора */
+.grabbing {
+    cursor: grabbing !important;
+}
+
+.grab {
+    cursor: grab !important;
 }

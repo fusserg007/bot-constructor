@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Отладка инициализации</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .log { background: #f5f5f5; padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .error { background: #ffebee; color: #c62828; }
+        .success { background: #e8f5e9; color: #2e7d32; }
+        .warning { background: #fff3e0; color: #ef6c00; }
+    </style>
+</head>
+<body>
+    <h1>🔍 Отладка инициализации BotConstructor</h1>
+    
+    <div id="log"></div>
+    
+    <button onclick="checkStatus()">🔄 Проверить статус</button>
+    <button onclick="forceInit()">🚀 Принудительная инициализация</button>
+    
+    <script>
+        function log(message, type = 'info') {
+            const logDiv = document.getElementById('log');
+            const entry = document.createElement('div');
+            entry.className = `log ${type}`;
+            entry.innerHTML = `[${new Date().toLocaleTimeString()}] ${message}`;
+            logDiv.appendChild(entry);
+            console.log(`[${type.toUpperCase()}] ${message}`);
+        }
+        
+        function checkStatus() {
+            log('🔍 Проверка статуса...', 'info');
+            log(`window.BotConstructor: ${typeof window.BotConstructor}`, 'info');
+            log(`window.botConstructor: ${typeof window.botConstructor}`, 'info');
+            log(`window.backToDashboard: ${typeof window.backToDashboard}`, 'info');
+            
+            if (window.botConstructor) {
+                log('✅ BotConstructor инициализирован!', 'success');
+            } else if (window.BotConstructor) {
+                log('⚠️ Класс найден, но экземпляр не создан', 'warning');
+            } else {
+                log('❌ Класс BotConstructor не найден', 'error');
+            }
+        }
+        
+        function forceInit() {
+            log('🚀 Попытка принудительной инициализации...', 'info');
+            try {
+                if (typeof window.BotConstructor === 'function') {
+                    window.botConstructor = new window.BotConstructor();
+                    log('✅ Принудительная инициализация успешна!', 'success');
+                    checkStatus();
+                } else {
+                    log('❌ Класс BotConstructor недоступен для инициализации', 'error');
+                }
+            } catch (error) {
+                log(`❌ Ошибка инициализации: ${error.message}`, 'error');
+            }
+        }
+        
+        // Отслеживаем загрузку скрипта
+        log('📋 Страница загружена', 'info');
+        
+        // Проверяем сразу
+        setTimeout(() => {
+            log('⏰ Первая проверка через 1 секунду', 'info');
+            checkStatus();
+        }, 1000);
+        
+        // Проверяем через 3 секунды
+        setTimeout(() => {
+            log('⏰ Вторая проверка через 3 секунды', 'info');
+            checkStatus();
+        }, 3000);
+        
+        // Отслеживаем DOMContentLoaded
+        document.addEventListener('DOMContentLoaded', () => {
+            log('📋 DOMContentLoaded сработал', 'info');
+        });
+        
+        // Отслеживаем полную загрузку
+        window.addEventListener('load', () => {
+            log('🌐 Window load сработал', 'info');
+            setTimeout(checkStatus, 500);
+        });
+    </script>
+    
+    <!-- Подключаем app.js -->
+    <script src="app.js"></script>
+</body>
+</html>

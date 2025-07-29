@@ -111,22 +111,70 @@ router.get('/bots/:botId/logs', async (req, res) => {
  */
 router.get('/dashboard', async (req, res) => {
     try {
-        // Генерируем общую статистику для админки
+        const fs = require('fs').promises;
+        const path = require('path');
+        
+        // Получаем реальную статистику из файловой системы
+        let totalBots = 0;
+        let activeBots = 0;
+        let totalUsers = 0;
+        let messagesProcessed = 0;
+        
+        try {
+            // Подсчитываем количество ботов
+            const botsDir = path.join(__dirname, '../data/bots');
+            const botFiles = await fs.readdir(botsDir);
+            const jsonFiles = botFiles.filter(file => file.endsWith('.json'));
+            totalBots = jsonFiles.length;
+            
+            // Подсчитываем активных ботов
+            for (const file of jsonFiles) {
+                try {
+                    const botData = JSON.parse(await fs.readFile(path.join(botsDir, file), 'utf8'));
+                    if (botData.status === 'active') {
+                        activeBots++;
+                    }
+                } catch (err) {
+                    // Игнорируем поврежденные файлы
+                }
+            }
+            
+            // Подсчитываем пользователей (если есть папка users)
+            try {
+                const usersDir = path.join(__dirname, '../data/users');
+                const userFiles = await fs.readdir(usersDir);
+                totalUsers = userFiles.filter(file => file.endsWith('.json')).length;
+            } catch (err) {
+                // Папка users может не существовать
+                totalUsers = 0;
+            }
+            
+            // Подсчитываем сообщения из логов (если есть папка logs)
+            try {
+                const logsDir = path.join(__dirname, '../data/logs');
+                const logFiles = await fs.readdir(logsDir);
+                // Простой подсчет - каждый лог файл примерно 100 сообщений
+                messagesProcessed = logFiles.length * 100;
+            } catch (err) {
+                messagesProcessed = 0;
+            }
+            
+        } catch (err) {
+            console.log('Ошибка чтения файловой системы:', err.message);
+            // Если не можем прочитать файлы, показываем нули
+        }
+        
         const dashboardStats = {
-            totalBots: Math.floor(Math.random() * 50) + 10,
-            activeBots: Math.floor(Math.random() * 30) + 5,
-            totalUsers: Math.floor(Math.random() * 5000) + 1000,
-            messagesProcessed: Math.floor(Math.random() * 50000) + 10000,
+            totalBots,
+            activeBots,
+            totalUsers,
+            messagesProcessed,
             systemHealth: {
-                cpu: Math.random() * 100,
-                memory: Math.random() * 100,
-                disk: Math.random() * 100
+                cpu: 0,
+                memory: 0,
+                disk: 0
             },
-            recentActivity: [
-                { type: 'bot_created', message: 'Создан новый бот', timestamp: new Date().toISOString() },
-                { type: 'message_sent', message: 'Отправлено сообщение', timestamp: new Date(Date.now() - 300000).toISOString() },
-                { type: 'user_joined', message: 'Новый пользователь', timestamp: new Date(Date.now() - 600000).toISOString() }
-            ]
+            recentActivity: []
         };
 
         res.json({

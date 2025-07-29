@@ -66,6 +66,7 @@ class NodeLibraryPanel {
     setupEventListeners() {
         // Обработка drag and drop
         this.container.addEventListener('dragstart', this.onDragStart.bind(this));
+        this.container.addEventListener('dragend', this.onDragEnd.bind(this));
         
         // Обработка кликов по узлам
         this.container.addEventListener('click', this.onNodeClick.bind(this));
@@ -288,6 +289,16 @@ class NodeLibraryPanel {
         }, 100);
         
         // Debug: console.log(`🎯 Начато перетаскивание узла: ${nodeType}`);
+    }
+
+    onDragEnd(event) {
+        if (!event.target.classList.contains('node-item')) return;
+        
+        // Убираем визуальные эффекты
+        event.target.classList.remove('dragging');
+        
+        // Сбрасываем стили курсора
+        document.body.style.cursor = 'default';
     }
 
     // Обработка кликов по узлам

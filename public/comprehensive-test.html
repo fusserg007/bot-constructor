@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Комплексная диагностика - Bot Constructor</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 8px; }
+        .test-result { margin: 10px 0; padding: 10px; border-radius: 4px; }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .warning { background: #fff3cd; color: #856404; }
+        .info { background: #d1ecf1; color: #0c5460; }
+        button { margin: 5px; padding: 10px 15px; cursor: pointer; }
+        .log { background: #f8f9fa; padding: 10px; border-radius: 4px; font-family: monospace; font-size: 12px; max-height: 200px; overflow-y: auto; }
+    </style>
+</head>
+<body>
+    <h1>🔧 Комплексная диагностика Bot Constructor</h1>
+    
+    <div class="test-section">
+        <h2>1. Тест кнопки "Назад"</h2>
+        <button onclick="testBackButton()">🔙 Тест кнопки назад</button>
+        <div id="backButtonResult" class="test-result info">Ожидание теста...</div>
+    </div>
+    
+    <div class="test-section">
+        <h2>2. Тест размера карточек</h2>
+        <button onclick="testCardSizes()">📏 Тест размера карточек</button>
+        <div id="cardSizeResult" class="test-result info">Ожидание теста...</div>
+        <div id="cardSizeDemo" style="display: none;">
+            <div class="bots-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1rem; margin-top: 10px;">
+                <div class="bot-card" style="background: white; border-radius: 8px; padding: 1rem; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border: 1px solid #e1e8ed;">
+                    <div class="bot-card-title" style="font-weight: bold; margin-bottom: 0.5rem;">Тестовая карточка 1</div>
+                    <div>Размер: <span id="card1Size"></span></div>
+                </div>
+                <div class="bot-card" style="background: white; border-radius: 8px; padding: 1rem; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border: 1px solid #e1e8ed;">
+                    <div class="bot-card-title" style="font-weight: bold; margin-bottom: 0.5rem;">Тестовая карточка 2</div>
+                    <div>Размер: <span id="card2Size"></span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h2>3. Тест загрузки данных</h2>
+        <button onclick="testDataLoading()">📡 Тест загрузки данных</button>
+        <div id="dataLoadingResult" class="test-result info">Ожидание теста...</div>
+    </div>
+    
+    <div class="test-section">
+        <h2>4. Тест скролинга</h2>
+        <button onclick="testScrolling()">📜 Тест скролинга</button>
+        <div id="scrollingResult" class="test-result info">Ожидание теста...</div>
+        <div id="scrollDemo" style="display: none;">
+            <div class="left-panel" style="width: 250px; background: white; border: 1px solid #e1e8ed; padding: 1rem; overflow-y: auto; height: 200px; max-height: 200px;">
+                <div>Элемент 1</div><div>Элемент 2</div><div>Элемент 3</div><div>Элемент 4</div><div>Элемент 5</div>
+                <div>Элемент 6</div><div>Элемент 7</div><div>Элемент 8</div><div>Элемент 9</div><div>Элемент 10</div>
+                <div>Элемент 11</div><div>Элемент 12</div><div>Элемент 13</div><div>Элемент 14</div><div>Элемент 15</div>
+                <div>Элемент 16</div><div>Элемент 17</div><div>Элемент 18</div><div>Элемент 19</div><div>Элемент 20</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h2>5. Тест схем ботов</h2>
+        <button onclick="testBotSchemas()">🤖 Тест схем ботов</button>
+        <div id="botSchemasResult" class="test-result info">Ожидание теста...</div>
+    </div>
+    
+    <div class="test-section">
+        <h2>📋 Общий лог</h2>
+        <button onclick="clearLog()">🗑️ Очистить лог</button>
+        <button onclick="copyLog()">📋 Копировать лог</button>
+        <button onclick="exportLog()">💾 Экспорт лога</button>
+        <button onclick="forceInit()">🔧 Принудительная инициализация</button>
+        <div id="testLog" class="log">Лог тестирования...\n</div>
+    </div>
+
+    <script>
+        function log(message, type = 'info') {
+            const logElement = document.getElementById('testLog');
+            const time = new Date().toLocaleTimeString();
+            const icon = type === 'error' ? '❌' : type === 'success' ? '✅' : type === 'warning' ? '⚠️' : 'ℹ️';
+            logElement.innerHTML += `[${time}] ${icon} ${message}\n`;
+            logElement.scrollTop = logElement.scrollHeight;
+        }
+
+        function clearLog() {
+            document.getElementById('testLog').innerHTML = 'Лог очищен...\n';
+        }
+        
+        function copyLog() {
+            const logElement = document.getElementById('testLog');
+            const logText = logElement.textContent || logElement.innerText;
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(logText).then(() => {
+                    log('📋 Лог скопирован в буфер обмена', 'success');
+                }).catch(() => {
+                    fallbackCopyLog(logText);
+                });
+            } else {
+                fallbackCopyLog(logText);
+            }
+        }
+        
+        function fallbackCopyLog(text) {
+            const textArea = document.createElement('textarea');
+            textArea.value = text;
+            document.body.appendChild(textArea);
+            textArea.select();
+            try {
+                document.execCommand('copy');
+                log('📋 Лог скопирован (fallback)', 'success');
+            } catch (err) {
+                log('❌ Не удалось скопировать лог', 'error');
+            }
+            document.body.removeChild(textArea);
+        }
+        
+        function exportLog() {
+            const logElement = document.getElementById('testLog');
+            const logText = logElement.textContent || logElement.innerText;
+            const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+            const filename = `bot-constructor-test-log-${timestamp}.txt`;
+            const blob = new Blob([logText], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            log(`💾 Лог экспортирован: ${filename}`, 'success');
+        }
+        
+        function forceInit() {
+            log('🔧 Принудительная инициализация...', 'info');
+            try {
+                if (typeof window.BotConstructor !== 'undefined' && !window.botConstructor) {
+                    window.botConstructor = new window.BotConstructor();
+                    log('✅ window.botConstructor принудительно инициализирован', 'success');
+                    
+                    // Перезапускаем тест кнопки назад
+                    setTimeout(() => {
+                        log('🔄 Перезапуск теста кнопки назад...', 'info');
+                        testBackButton();
+                    }, 500);
+                } else if (window.botConstructor) {
+                    log('ℹ️ window.botConstructor уже инициализирован', 'info');
+                } else {
+                    log('❌ Класс BotConstructor недоступен', 'error');
+                }
+            } catch (error) {
+                log(`❌ Ошибка принудительной инициализации: ${error.message}`, 'error');
+            }
+        }
+
+        function setResult(elementId, message, type) {
+            const element = document.getElementById(elementId);
+            element.textContent = message;
+            element.className = `test-result ${type}`;
+        }
+
+        // 1. Тест кнопки назад
+        function testBackButton() {
+            log('Тестирование кнопки назад...');
+            
+            try {
+                // Диагностическая информация
+                log(`🔍 Диагностика: window.BotConstructor = ${typeof window.BotConstructor}`, 'info');
+                log(`🔍 Диагностика: window.botConstructor = ${typeof window.botConstructor}`, 'info');
+                log(`🔍 Диагностика: window.backToDashboard = ${typeof window.backToDashboard}`, 'info');
+                
+                // Ждем загрузки app.js и инициализации
+                setTimeout(() => {
+                    // Проверяем наличие функции backToDashboard
+                    if (typeof window.backToDashboard === 'function') {
+                        // Тестируем готовность функции
+                        if (window.botConstructor && typeof window.botConstructor.showView === 'function') {
+                            setResult('backButtonResult', '✅ Функция backToDashboard полностью готова', 'success');
+                            log('✅ Функция backToDashboard существует и window.botConstructor инициализирован', 'success');
+                        } else if (window.botConstructor) {
+                            setResult('backButtonResult', '⚠️ backToDashboard найдена, но showView недоступен', 'warning');
+                            log('⚠️ window.botConstructor найден, но showView недоступен', 'warning');
+                        } else {
+                            setResult('backButtonResult', '⚠️ backToDashboard найдена, но botConstructor не инициализирован', 'warning');
+                            log('⚠️ Функция backToDashboard существует, но window.botConstructor не инициализирован', 'warning');
+                        }
+                    } else if (window.botConstructor && typeof window.botConstructor.showView === 'function') {
+                        setResult('backButtonResult', '✅ BotConstructor.showView найден (альтернатива)', 'success');
+                        log('✅ BotConstructor.showView найден как альтернатива backToDashboard', 'success');
+                    } else if (typeof window.BotConstructor !== 'undefined') {
+                        setResult('backButtonResult', '⚠️ BotConstructor класс найден, но экземпляр не создан', 'warning');
+                        log('⚠️ BotConstructor класс найден, но window.botConstructor не инициализирован', 'warning');
+                    } else {
+                        setResult('backButtonResult', '❌ Функция backToDashboard не найдена', 'error');
+                        log('❌ Функция backToDashboard не найдена', 'error');
+                    }
+                    
+                    // Проверяем наличие кнопки в DOM
+                    const backButtons = document.querySelectorAll('[onclick*="backToDashboard"]');
+                    if (backButtons.length > 0) {
+                        log(`✅ Найдено ${backButtons.length} кнопок с backToDashboard`, 'success');
+                    } else {
+                        log('❌ Кнопки с backToDashboard не найдены в DOM', 'error');
+                    }
+                    
+                    // Добавляем тестовую кнопку для проверки функциональности
+                    if (typeof window.backToDashboard === 'function') {
+                        const testButton = document.createElement('button');
+                        testButton.textContent = '🧪 Тест кнопки "Назад"';
+                        testButton.className = 'btn btn-secondary btn-sm';
+                        testButton.onclick = () => {
+                            try {
+                                log('🧪 Тестируем функцию backToDashboard...', 'info');
+                                window.backToDashboard();
+                                log('✅ Функция backToDashboard выполнена без ошибок', 'success');
+                            } catch (error) {
+                                log(`❌ Ошибка при вызове backToDashboard: ${error.message}`, 'error');
+                            }
+                        };
+                        
+                        const resultDiv = document.getElementById('backButtonResult');
+                        if (resultDiv) {
+                            resultDiv.appendChild(document.createElement('br'));
+                            resultDiv.appendChild(testButton);
+                        }
+                    }
+                }, 2000); // Увеличиваем время ожидания для полной инициализации
+                
+            } catch (error) {
+                setResult('backButtonResult', `❌ Ошибка: ${error.message}`, 'error');
+                log(`❌ Ошибка тестирования кнопки назад: ${error.message}`, 'error');
+            }
+        }
+
+        // 2. Тест размера карточек
+        function testCardSizes() {
+            log('Тестирование размера карточек...');
+            
+            try {
+                const demo = document.getElementById('cardSizeDemo');
+                demo.style.display = 'block';
+                
+                setTimeout(() => {
+                    const cards = demo.querySelectorAll('.bot-card');
+                    let allGood = true;
+                    
+                    cards.forEach((card, index) => {
+                        const rect = card.getBoundingClientRect();
+                        const sizeSpan = document.getElementById(`card${index + 1}Size`);
+                        sizeSpan.textContent = `${Math.round(rect.width)}x${Math.round(rect.height)}px`;
+                        
+                        if (rect.width < 200) {
+                            allGood = false;
+                            log(`⚠️ Карточка ${index + 1} слишком узкая: ${Math.round(rect.width)}px`, 'warning');
+                        }
+                    });
+                    
+                    if (allGood) {
+                        setResult('cardSizeResult', '✅ Размеры карточек корректные', 'success');
+                        log('✅ Все карточки имеют корректный размер', 'success');
+                    } else {
+                        setResult('cardSizeResult', '⚠️ Некоторые карточки имеют неправильный размер', 'warning');
+                    }
+                }, 100);
+                
+            } catch (error) {
+                setResult('cardSizeResult', `❌ Ошибка: ${error.message}`, 'error');
+                log(`❌ Ошибка тестирования карточек: ${error.message}`, 'error');
+            }
+        }
+
+        // 3. Тест загрузки данных
+        async function testDataLoading() {
+            log('Тестирование загрузки данных...');
+            
+            try {
+                setResult('dataLoadingResult', '🔄 Загрузка...', 'info');
+                
+                const response = await fetch('/api/bots');
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    
+                    if (data.success && data.data && data.data.bots) {
+                        setResult('dataLoadingResult', `✅ Загружено ${data.data.bots.length} ботов`, 'success');
+                        log(`✅ API работает: загружено ${data.data.bots.length} ботов`, 'success');
+                    } else {
+                        setResult('dataLoadingResult', '⚠️ API отвечает, но данные пустые', 'warning');
+                        log('⚠️ API отвечает, но данные пустые', 'warning');
+                    }
+                } else {
+                    setResult('dataLoadingResult', `❌ API ошибка: ${response.status}`, 'error');
+                    log(`❌ API ошибка: ${response.status} ${response.statusText}`, 'error');
+                }
+                
+            } catch (error) {
+                setResult('dataLoadingResult', `❌ Ошибка сети: ${error.message}`, 'error');
+                log(`❌ Ошибка загрузки данных: ${error.message}`, 'error');
+            }
+        }
+
+        // 4. Тест скролинга
+        function testScrolling() {
+            log('Тестирование скролинга...');
+            
+            try {
+                const demo = document.getElementById('scrollDemo');
+                demo.style.display = 'block';
+                
+                setTimeout(() => {
+                    const scrollContainer = demo.querySelector('.left-panel');
+                    const initialScrollTop = scrollContainer.scrollTop;
+                    
+                    // Прокручиваем вниз
+                    scrollContainer.scrollTop = 100;
+                    
+                    setTimeout(() => {
+                        if (scrollContainer.scrollTop > initialScrollTop) {
+                            setResult('scrollingResult', '✅ Скролинг работает', 'success');
+                            log('✅ Скролинг функционирует корректно', 'success');
+                        } else {
+                            setResult('scrollingResult', '❌ Скролинг не работает', 'error');
+                            log('❌ Скролинг не функционирует', 'error');
+                        }
+                    }, 100);
+                }, 100);
+                
+            } catch (error) {
+                setResult('scrollingResult', `❌ Ошибка: ${error.message}`, 'error');
+                log(`❌ Ошибка тестирования скролинга: ${error.message}`, 'error');
+            }
+        }
+
+        // 5. Тест схем ботов
+        async function testBotSchemas() {
+            log('Тестирование схем ботов...');
+            
+            try {
+                setResult('botSchemasResult', '🔄 Проверка...', 'info');
+                
+                // Сначала получаем список ботов
+                const listResponse = await fetch('/api/bots');
+                if (!listResponse.ok) {
+                    throw new Error(`Список ботов недоступен: ${listResponse.status}`);
+                }
+                
+                const listData = await listResponse.json();
+                if (!listData.success || !listData.data.bots.length) {
+                    throw new Error('Нет доступных ботов для тестирования');
+                }
+                
+                // Берем первого бота из списка
+                const firstBot = listData.data.bots[0];
+                log(`🔍 Тестируем схему бота: ${firstBot.id}`, 'info');
+                
+                // Проверяем конкретную схему
+                const response = await fetch(`/api/bots/${firstBot.id}`);
+                
+                if (response.ok) {
+                    const botData = await response.json();
+                    
+                    if (botData.success && botData.data) {
+                        const bot = botData.data;
+                        const hasNodes = bot.configuration && bot.configuration.nodes && bot.configuration.nodes.length > 0;
+                        
+                        if (hasNodes) {
+                            setResult('botSchemasResult', `✅ Схема найдена: ${bot.configuration.nodes.length} узлов`, 'success');
+                            log(`✅ Схема бота содержит ${bot.configuration.nodes.length} узлов`, 'success');
+                        } else {
+                            setResult('botSchemasResult', '⚠️ Схема найдена, но пустая', 'warning');
+                            log('⚠️ Схема бота найдена, но не содержит узлов', 'warning');
+                        }
+                    } else {
+                        setResult('botSchemasResult', '❌ Схема не найдена', 'error');
+                        log('❌ Схема бота не найдена', 'error');
+                    }
+                } else {
+                    setResult('botSchemasResult', `❌ Ошибка API: ${response.status}`, 'error');
+                    log(`❌ Ошибка получения схемы: ${response.status}`, 'error');
+                }
+                
+            } catch (error) {
+                setResult('botSchemasResult', `❌ Ошибка: ${error.message}`, 'error');
+                log(`❌ Ошибка тестирования схем: ${error.message}`, 'error');
+            }
+        }
+
+        // Автозапуск всех тестов
+        function runAllTests() {
+            log('🚀 Запуск всех тестов...', 'info');
+            
+            setTimeout(() => testBackButton(), 500);
+            setTimeout(() => testCardSizes(), 1000);
+            setTimeout(() => testDataLoading(), 1500);
+            setTimeout(() => testScrolling(), 2000);
+            setTimeout(() => testBotSchemas(), 2500);
+        }
+
+        // Проверка загрузки app.js с новым менеджером инициализации
+        function checkAppJS() {
+            return new Promise((resolve) => {
+                // Сначала загружаем систему отладки
+                if (!window.editorDebugger) {
+                    log('📥 Загрузка EditorDebugger...', 'info');
+                    const debugScript = document.createElement('script');
+                    debugScript.src = 'js/EditorDebugger.js';
+                    debugScript.onload = () => {
+                        log('✅ EditorDebugger загружен', 'success');
+                        loadBotConstructorManager();
+                    };
+                    debugScript.onerror = () => {
+                        log('⚠️ Ошибка загрузки EditorDebugger, продолжаем без него', 'warning');
+                        loadBotConstructorManager();
+                    };
+                    document.head.appendChild(debugScript);
+                } else {
+                    loadBotConstructorManager();
+                }
+                
+                function loadBotConstructorManager() {
+                    // Загружаем менеджер инициализации
+                    if (!window.BotConstructorManager) {
+                        log('📥 Загрузка BotConstructorManager...', 'info');
+                        const managerScript = document.createElement('script');
+                        managerScript.src = 'js/BotConstructorManager.js';
+                        managerScript.onload = () => {
+                            log('✅ BotConstructorManager загружен', 'success');
+                            loadAppJS();
+                        };
+                        managerScript.onerror = () => {
+                            log('❌ Ошибка загрузки BotConstructorManager', 'error');
+                            loadAppJS(); // Пробуем загрузить app.js без менеджера
+                        };
+                        document.head.appendChild(managerScript);
+                    } else {
+                        loadAppJS();
+                    }
+                }
+                
+                function loadAppJS() {
+                    // Проверяем, загружен ли уже app.js
+                    if (typeof window.BotConstructor !== 'undefined') {
+                        log('✅ app.js уже загружен', 'success');
+                        waitForInitialization();
+                    } else {
+                        // Если app.js не загружен, загружаем его
+                        log('📥 Загрузка app.js...', 'info');
+                        const script = document.createElement('script');
+                        script.src = 'app.js';
+                        script.onload = () => {
+                            log('✅ app.js загружен динамически', 'success');
+                            waitForInitialization();
+                        };
+                        script.onerror = () => {
+                            log('❌ Ошибка загрузки app.js', 'error');
+                            resolve();
+                        };
+                        document.head.appendChild(script);
+                    }
+                }
+                
+                function waitForInitialization() {
+                    // Используем новый менеджер инициализации если доступен
+                    if (window.botConstructorManager) {
+                        log('🔧 Используем BotConstructorManager для инициализации', 'info');
+                        window.botConstructorManager.initialize()
+                            .then(() => {
+                                log('✅ BotConstructor инициализирован через менеджер', 'success');
+                                resolve();
+                            })
+                            .catch((error) => {
+                                log(`❌ Ошибка инициализации через менеджер: ${error.message}`, 'error');
+                                resolve();
+                            });
+                    } else {
+                        // Fallback к старой логике
+                        log('⚠️ BotConstructorManager недоступен, используем старую логику', 'warning');
+                        let attempts = 0;
+                        const checkInit = () => {
+                            attempts++;
+                            if (window.botConstructor) {
+                                log('✅ BotConstructor инициализирован (старая логика)', 'success');
+                                resolve();
+                            } else if (attempts < 10) {
+                                setTimeout(checkInit, 200);
+                            } else {
+                                log('⚠️ BotConstructor не инициализирован после ожидания', 'warning');
+                                resolve();
+                            }
+                        };
+                        checkInit();
+                    }
+                }
+            });
+        }
+
+        // Запуск при загрузке
+        document.addEventListener('DOMContentLoaded', async () => {
+            log('📋 Диагностическая страница загружена', 'info');
+            
+            // Проверяем app.js
+            await checkAppJS();
+            
+            // Автозапуск через 1 секунду
+            setTimeout(runAllTests, 1000);
+        });
+    </script>
+</body>
+</html>

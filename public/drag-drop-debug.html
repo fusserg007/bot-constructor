@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Drag & Drop - Bot Constructor</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: #f5f5f5;
+        }
+        
+        .debug-container {
+            display: flex;
+            gap: 20px;
+            height: 80vh;
+        }
+        
+        .debug-left {
+            width: 300px;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
+            overflow-y: auto;
+        }
+        
+        .debug-right {
+            flex: 1;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            position: relative;
+        }
+        
+        .debug-canvas {
+            width: 100%;
+            height: 100%;
+            background: #fafafa;
+            border: 2px dashed #ccc;
+        }
+        
+        .debug-log {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 400px;
+            height: 300px;
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 12px;
+            overflow-y: auto;
+            z-index: 1000;
+        }
+        
+        .test-node {
+            background: #e3f2fd;
+            border: 1px solid #2196f3;
+            border-radius: 4px;
+            padding: 10px;
+            margin: 5px 0;
+            cursor: grab;
+            transition: all 0.2s ease;
+        }
+        
+        .test-node:hover {
+            background: #bbdefb;
+            transform: translateX(5px);
+        }
+        
+        .test-node.dragging {
+            opacity: 0.5;
+            transform: scale(0.95);
+        }
+        
+        .status {
+            background: #f0f0f0;
+            padding: 10px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+        }
+        
+        .error {
+            color: #f44336;
+        }
+        
+        .success {
+            color: #4caf50;
+        }
+        
+        .warning {
+            color: #ff9800;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔧 Debug Drag & Drop Functionality</h1>
+    
+    <div class="status" id="status">
+        <div>🔄 Инициализация...</div>
+    </div>
+    
+    <div class="debug-container">
+        <div class="debug-left">
+            <h3>Тестовые узлы</h3>
+            <div id="testNodes">
+                <div class="test-node" draggable="true" data-node-type="command">
+                    📝 Command Node
+                </div>
+                <div class="test-node" draggable="true" data-node-type="message">
+                    💬 Message Node
+                </div>
+                <div class="test-node" draggable="true" data-node-type="condition">
+                    ❓ Condition Node
+                </div>
+                <div class="test-node" draggable="true" data-node-type="action">
+                    ⚡ Action Node
+                </div>
+            </div>
+            
+            <h3>Статус скриптов</h3>
+            <div id="scriptStatus"></div>
+        </div>
+        
+        <div class="debug-right">
+            <canvas id="debugCanvas" class="debug-canvas"></canvas>
+        </div>
+    </div>
+    
+    <div class="debug-log" id="debugLog">
+        <div><strong>🐛 Debug Log:</strong></div>
+    </div>
+
+    <script>
+        // Функция логирования
+        function debugLog(message, type = 'info') {
+            const logElement = document.getElementById('debugLog');
+            const time = new Date().toLocaleTimeString();
+            const icon = type === 'error' ? '❌' : type === 'success' ? '✅' : type === 'warning' ? '⚠️' : 'ℹ️';
+            logElement.innerHTML += `<div>[${time}] ${icon} ${message}</div>`;
+            logElement.scrollTop = logElement.scrollHeight;
+            console.log(`[DEBUG] ${message}`);
+        }
+
+        // Функция обновления статуса
+        function updateStatus(message, type = 'info') {
+            const statusElement = document.getElementById('status');
+            const className = type === 'error' ? 'error' : type === 'success' ? 'success' : type === 'warning' ? 'warning' : '';
+            statusElement.innerHTML = `<div class="${className}">${message}</div>`;
+        }
+
+        // Проверка доступности скриптов
+        function checkScripts() {
+            const scripts = [
+                { name: 'NodeLibrary', check: () => typeof NodeLibrary !== 'undefined' },
+                { name: 'BaseNode', check: () => typeof BaseNode !== 'undefined' },
+                { name: 'VisualEditor', check: () => typeof VisualEditor !== 'undefined' },
+                { name: 'NodeLibraryPanel', check: () => typeof NodeLibraryPanel !== 'undefined' }
+            ];
+            
+            const statusElement = document.getElementById('scriptStatus');
+            let allLoaded = true;
+            
+            statusElement.innerHTML = scripts.map(script => {
+                const loaded = script.check();
+                if (!loaded) allLoaded = false;
+                return `<div class="${loaded ? 'success' : 'error'}">${loaded ? '✅' : '❌'} ${script.name}</div>`;
+            }).join('');
+            
+            return allLoaded;
+        }
+
+        // Простая реализация drag-and-drop для тестирования
+        function setupBasicDragDrop() {
+            const testNodes = document.querySelectorAll('.test-node');
+            const canvas = document.getElementById('debugCanvas');
+            
+            // Настройка canvas
+            canvas.width = canvas.offsetWidth;
+            canvas.height = canvas.offsetHeight;
+            const ctx = canvas.getContext('2d');
+            
+            debugLog('Настройка базового drag-and-drop');
+            
+            // Обработчики для узлов
+            testNodes.forEach(node => {
+                node.addEventListener('dragstart', (e) => {
+                    const nodeType = e.target.dataset.nodeType;
+                    e.dataTransfer.setData('text/plain', nodeType);
+                    e.target.classList.add('dragging');
+                    debugLog(`🎯 Начато перетаскивание: ${nodeType}`);
+                });
+                
+                node.addEventListener('dragend', (e) => {
+                    e.target.classList.remove('dragging');
+                    debugLog('🏁 Перетаскивание завершено');
+                });
+            });
+            
+            // Обработчики для canvas
+            canvas.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                e.dataTransfer.dropEffect = 'copy';
+                canvas.style.background = '#f0f8ff';
+            });
+            
+            canvas.addEventListener('dragleave', (e) => {
+                e.preventDefault();
+                canvas.style.background = '#fafafa';
+            });
+            
+            canvas.addEventListener('drop', (e) => {
+                e.preventDefault();
+                canvas.style.background = '#fafafa';
+                
+                const nodeType = e.dataTransfer.getData('text/plain');
+                const rect = canvas.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                
+                debugLog(`🎯 Drop на canvas: ${nodeType} в позиции (${x}, ${y})`, 'success');
+                
+                // Рисуем узел на canvas
+                ctx.fillStyle = '#e3f2fd';
+                ctx.fillRect(x - 50, y - 25, 100, 50);
+                ctx.strokeStyle = '#2196f3';
+                ctx.strokeRect(x - 50, y - 25, 100, 50);
+                
+                ctx.fillStyle = '#333';
+                ctx.font = '12px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText(nodeType, x, y + 4);
+            });
+        }
+
+        // Инициализация
+        function init() {
+            debugLog('🚀 Начало инициализации debug страницы');
+            
+            // Проверяем скрипты
+            setTimeout(() => {
+                const scriptsLoaded = checkScripts();
+                
+                if (scriptsLoaded) {
+                    debugLog('✅ Все скрипты загружены успешно', 'success');
+                    updateStatus('✅ Все скрипты загружены. Тестирование drag-and-drop...', 'success');
+                    
+                    // Пытаемся инициализировать полную систему
+                    try {
+                        const nodeLibrary = new NodeLibrary();
+                        nodeLibrary.init();
+                        debugLog(`📚 NodeLibrary инициализирована (${nodeLibrary.getAllNodes().length} узлов)`, 'success');
+                        
+                        const canvas = document.getElementById('debugCanvas');
+                        const visualEditor = new VisualEditor(canvas, nodeLibrary, {
+                            autoSave: false,
+                            serverSync: false,
+                            validation: false
+                        });
+                        debugLog('🎨 VisualEditor инициализирован', 'success');
+                        
+                        updateStatus('🎉 Полная система инициализирована успешно!', 'success');
+                        
+                    } catch (error) {
+                        debugLog(`❌ Ошибка инициализации полной системы: ${error.message}`, 'error');
+                        updateStatus('⚠️ Ошибка полной системы. Используется базовый drag-and-drop', 'warning');
+                        setupBasicDragDrop();
+                    }
+                } else {
+                    debugLog('❌ Не все скрипты загружены', 'error');
+                    updateStatus('❌ Ошибка загрузки скриптов. Используется базовый drag-and-drop', 'error');
+                    setupBasicDragDrop();
+                }
+            }, 1000);
+        }
+
+        // Запуск после загрузки DOM
+        document.addEventListener('DOMContentLoaded', init);
+        
+        // Обработка ошибок
+        window.addEventListener('error', (e) => {
+            debugLog(`💥 JavaScript ошибка: ${e.message} в ${e.filename}:${e.lineno}`, 'error');
+        });
+    </script>
+    
+    <!-- Подключаем скрипты с обработкой ошибок -->
+    <script src="js/NodeLibrary.js" onerror="debugLog('❌ Ошибка загрузки NodeLibrary.js', 'error')"></script>
+    <script src="js/BaseNode.js" onerror="debugLog('❌ Ошибка загрузки BaseNode.js', 'error')"></script>
+    <script src="js/ActionNodes.js" onerror="debugLog('❌ Ошибка загрузки ActionNodes.js', 'error')"></script>
+    <script src="js/NodeRegistry.js" onerror="debugLog('❌ Ошибка загрузки NodeRegistry.js', 'error')"></script>
+    <script src="js/VisualEditor.js" onerror="debugLog('❌ Ошибка загрузки VisualEditor.js', 'error')"></script>
+    <script src="js/NodeLibraryPanel.js" onerror="debugLog('❌ Ошибка загрузки NodeLibraryPanel.js', 'error')"></script>
+</body>
+</html>

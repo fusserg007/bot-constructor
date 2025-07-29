@@ -1,0 +1,855 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔧 Visual Editor Debug System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f5f5;
+            color: #333;
+        }
+        
+        .debug-container {
+            display: flex;
+            height: 100vh;
+        }
+        
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .debug-panel {
+            width: 400px;
+            background: #fff;
+            border-left: 1px solid #ddd;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .header {
+            background: #2c3e50;
+            color: white;
+            padding: 15px;
+            text-align: center;
+        }
+        
+        .tabs {
+            display: flex;
+            background: #ecf0f1;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .tab {
+            flex: 1;
+            padding: 10px;
+            text-align: center;
+            cursor: pointer;
+            border: none;
+            background: none;
+            transition: background 0.2s;
+        }
+        
+        .tab.active {
+            background: #3498db;
+            color: white;
+        }
+        
+        .tab:hover:not(.active) {
+            background: #d5dbdb;
+        }
+        
+        .tab-content {
+            flex: 1;
+            padding: 15px;
+            overflow-y: auto;
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .controls {
+            padding: 10px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #ddd;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            background: white;
+            cursor: pointer;
+            border-radius: 4px;
+            font-size: 12px;
+            transition: all 0.2s;
+        }
+        
+        .btn:hover {
+            background: #e9ecef;
+        }
+        
+        .btn.primary {
+            background: #007bff;
+            color: white;
+            border-color: #007bff;
+        }
+        
+        .btn.danger {
+            background: #dc3545;
+            color: white;
+            border-color: #dc3545;
+        }
+        
+        .btn.success {
+            background: #28a745;
+            color: white;
+            border-color: #28a745;
+        }
+        
+        .log-entry {
+            margin-bottom: 8px;
+            padding: 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            border-left: 4px solid #ddd;
+        }
+        
+        .log-entry.debug {
+            background: #f8f9fa;
+            border-left-color: #6c757d;
+        }
+        
+        .log-entry.info {
+            background: #d1ecf1;
+            border-left-color: #17a2b8;
+        }
+        
+        .log-entry.warn {
+            background: #fff3cd;
+            border-left-color: #ffc107;
+        }
+        
+        .log-entry.error {
+            background: #f8d7da;
+            border-left-color: #dc3545;
+        }
+        
+        .log-timestamp {
+            color: #6c757d;
+            font-size: 10px;
+        }
+        
+        .log-category {
+            font-weight: bold;
+            color: #495057;
+        }
+        
+        .log-message {
+            margin-top: 4px;
+        }
+        
+        .log-data {
+            margin-top: 4px;
+            font-family: monospace;
+            background: rgba(0,0,0,0.05);
+            padding: 4px;
+            border-radius: 2px;
+            font-size: 10px;
+        }
+        
+        .filters {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .filter-input {
+            padding: 6px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .stat-card {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+            text-align: center;
+        }
+        
+        .stat-number {
+            font-size: 18px;
+            font-weight: bold;
+            color: #007bff;
+        }
+        
+        .stat-label {
+            font-size: 11px;
+            color: #6c757d;
+            margin-top: 4px;
+        }
+        
+        .canvas-preview {
+            width: 100%;
+            height: 200px;
+            border: 1px solid #ddd;
+            background: #f8f9fa;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #6c757d;
+            margin-bottom: 15px;
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        
+        .status-indicator.success {
+            background: #28a745;
+        }
+        
+        .status-indicator.warning {
+            background: #ffc107;
+        }
+        
+        .status-indicator.error {
+            background: #dc3545;
+        }
+        
+        .status-indicator.info {
+            background: #17a2b8;
+        }
+        
+        .problem-item {
+            background: #fff;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+        
+        .problem-severity {
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 2px;
+            color: white;
+            font-weight: bold;
+        }
+        
+        .problem-severity.critical {
+            background: #dc3545;
+        }
+        
+        .problem-severity.high {
+            background: #fd7e14;
+        }
+        
+        .problem-severity.medium {
+            background: #ffc107;
+            color: #000;
+        }
+        
+        .problem-severity.low {
+            background: #6c757d;
+        }
+        
+        .auto-scroll {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="debug-container">
+        <div class="main-content">
+            <div class="header">
+                <h1>🔧 Visual Editor Debug System</h1>
+                <p>Система отладки визуального редактора схем ботов</p>
+            </div>
+            
+            <div class="controls">
+                <button class="btn primary" onclick="startDiagnostics()">🔍 Запустить диагностику</button>
+                <button class="btn" onclick="testCanvasRedraw()">🎨 Тест отрисовки</button>
+                <button class="btn" onclick="loadTestSchema()">📊 Загрузить тестовую схему</button>
+                <button class="btn" onclick="clearCanvas()">🗑️ Очистить canvas</button>
+                <button class="btn" onclick="forceInitBotConstructor()">🚀 Принудительная инициализация</button>
+                <button class="btn success" onclick="exportDebugData()">💾 Экспорт отладки</button>
+            </div>
+            
+            <div style="flex: 1; padding: 20px; background: white; margin: 10px; border-radius: 8px;">
+                <h3>Основная область тестирования</h3>
+                <div id="mainTestArea">
+                    <p>Здесь будет отображаться основной интерфейс для тестирования визуального редактора.</p>
+                    <div id="testResults" style="margin-top: 20px;"></div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="debug-panel">
+            <div class="tabs">
+                <button class="tab active" onclick="showTab('logs')">📋 Логи</button>
+                <button class="tab" onclick="showTab('canvas')">🎨 Canvas</button>
+                <button class="tab" onclick="showTab('schema')">📊 Схема</button>
+                <button class="tab" onclick="showTab('problems')">⚠️ Проблемы</button>
+            </div>
+            
+            <!-- Вкладка Логи -->
+            <div id="logs-tab" class="tab-content active">
+                <div class="filters">
+                    <select id="levelFilter" class="filter-input" onchange="updateLogDisplay()">
+                        <option value="">Все уровни</option>
+                        <option value="debug">Debug</option>
+                        <option value="info">Info</option>
+                        <option value="warn">Warning</option>
+                        <option value="error">Error</option>
+                    </select>
+                    <select id="categoryFilter" class="filter-input" onchange="updateLogDisplay()">
+                        <option value="">Все категории</option>
+                    </select>
+                    <input type="text" id="searchFilter" class="filter-input" placeholder="Поиск..." onkeyup="updateLogDisplay()">
+                </div>
+                
+                <div class="controls">
+                    <button class="btn" onclick="clearLogs()">🗑️ Очистить</button>
+                    <button class="btn" onclick="exportLogs()">💾 Экспорт</button>
+                    <label>
+                        <input type="checkbox" id="autoScroll" checked> Автоскролл
+                    </label>
+                </div>
+                
+                <div id="logContainer" class="auto-scroll"></div>
+            </div>
+            
+            <!-- Вкладка Canvas -->
+            <div id="canvas-tab" class="tab-content">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-number" id="canvasWidth">-</div>
+                        <div class="stat-label">Ширина</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="canvasHeight">-</div>
+                        <div class="stat-label">Высота</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="nodesCount">-</div>
+                        <div class="stat-label">Узлы</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="connectionsCount">-</div>
+                        <div class="stat-label">Связи</div>
+                    </div>
+                </div>
+                
+                <div class="canvas-preview" id="canvasPreview">
+                    Canvas предпросмотр
+                </div>
+                
+                <div class="controls">
+                    <button class="btn" onclick="refreshCanvasInfo()">🔄 Обновить</button>
+                    <button class="btn" onclick="validateCanvas()">✅ Проверить</button>
+                </div>
+                
+                <div id="canvasStatus"></div>
+            </div>
+            
+            <!-- Вкладка Схема -->
+            <div id="schema-tab" class="tab-content">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-number" id="totalNodes">-</div>
+                        <div class="stat-label">Всего узлов</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="validNodes">-</div>
+                        <div class="stat-label">Валидные</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="invalidNodes">-</div>
+                        <div class="stat-label">С ошибками</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="orphanedNodes">-</div>
+                        <div class="stat-label">Изолированные</div>
+                    </div>
+                </div>
+                
+                <div class="controls">
+                    <button class="btn" onclick="inspectSchema()">🔍 Анализ</button>
+                    <button class="btn" onclick="validateSchema()">✅ Валидация</button>
+                </div>
+                
+                <div id="schemaDetails"></div>
+            </div>
+            
+            <!-- Вкладка Проблемы -->
+            <div id="problems-tab" class="tab-content">
+                <div class="controls">
+                    <button class="btn primary" onclick="runDiagnostics()">🔍 Диагностика</button>
+                    <button class="btn success" onclick="applyAutoFixes()">🔧 Автоисправления</button>
+                </div>
+                
+                <div id="problemsList"></div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Подключаем скрипты -->
+    <script src="js/DebugLogger.js"></script>
+    <script>
+        // Глобальные переменные
+        let currentTab = 'logs';
+        let logUpdateInterval;
+        
+        // Инициализация при загрузке
+        document.addEventListener('DOMContentLoaded', () => {
+            debugLogger.info('system', 'Debug система инициализирована');
+            
+            // Настраиваем автообновление логов
+            setupLogDisplay();
+            
+            // Запускаем начальную диагностику
+            setTimeout(startDiagnostics, 1000);
+        });
+        
+        // === УПРАВЛЕНИЕ ВКЛАДКАМИ ===
+        
+        function showTab(tabName) {
+            // Скрываем все вкладки
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Показываем выбранную вкладку
+            document.getElementById(tabName + '-tab').classList.add('active');
+            event.target.classList.add('active');
+            
+            currentTab = tabName;
+            
+            // Обновляем содержимое вкладки
+            switch(tabName) {
+                case 'canvas':
+                    refreshCanvasInfo();
+                    break;
+                case 'schema':
+                    inspectSchema();
+                    break;
+                case 'problems':
+                    runDiagnostics();
+                    break;
+            }
+        }
+        
+        // === СИСТЕМА ЛОГИРОВАНИЯ ===
+        
+        function setupLogDisplay() {
+            // Добавляем слушателя для новых логов
+            debugLogger.addListener(displayNewLog);
+            
+            // Отображаем существующие логи
+            updateLogDisplay();
+            
+            // Обновляем категории в фильтре
+            updateCategoryFilter();
+            
+            // Настраиваем автообновление
+            logUpdateInterval = setInterval(updateLogDisplay, 2000);
+        }
+        
+        function displayNewLog(logEntry) {
+            const container = document.getElementById('logContainer');
+            const logElement = createLogElement(logEntry);
+            container.appendChild(logElement);
+            
+            // Автоскролл
+            if (document.getElementById('autoScroll').checked) {
+                container.scrollTop = container.scrollHeight;
+            }
+            
+            // Ограничиваем количество отображаемых логов
+            while (container.children.length > 500) {
+                container.removeChild(container.firstChild);
+            }
+        }
+        
+        function createLogElement(logEntry) {
+            const div = document.createElement('div');
+            div.className = `log-entry ${logEntry.level}`;
+            
+            const timestamp = logEntry.timestamp.toLocaleTimeString();
+            
+            div.innerHTML = `
+                <div class="log-timestamp">${timestamp}</div>
+                <div class="log-category">[${logEntry.category}]</div>
+                <div class="log-message">${logEntry.message}</div>
+                ${logEntry.data ? `<div class="log-data">${JSON.stringify(logEntry.data, null, 2)}</div>` : ''}
+            `;
+            
+            return div;
+        }
+        
+        function updateLogDisplay() {
+            const levelFilter = document.getElementById('levelFilter').value;
+            const categoryFilter = document.getElementById('categoryFilter').value;
+            const searchFilter = document.getElementById('searchFilter').value;
+            
+            const filter = {};
+            if (levelFilter) filter.level = levelFilter;
+            if (categoryFilter) filter.category = categoryFilter;
+            if (searchFilter) filter.search = searchFilter;
+            
+            const logs = debugLogger.getLogs(filter);
+            const container = document.getElementById('logContainer');
+            
+            // Очищаем контейнер
+            container.innerHTML = '';
+            
+            // Добавляем отфильтрованные логи
+            logs.forEach(log => {
+                container.appendChild(createLogElement(log));
+            });
+            
+            // Автоскролл
+            if (document.getElementById('autoScroll').checked) {
+                container.scrollTop = container.scrollHeight;
+            }
+        }
+        
+        function updateCategoryFilter() {
+            const select = document.getElementById('categoryFilter');
+            const stats = debugLogger.getStats();
+            
+            // Очищаем существующие опции (кроме первой)
+            while (select.children.length > 1) {
+                select.removeChild(select.lastChild);
+            }
+            
+            // Добавляем категории
+            Object.keys(stats.byCategory).forEach(category => {
+                const option = document.createElement('option');
+                option.value = category;
+                option.textContent = `${category} (${stats.byCategory[category]})`;
+                select.appendChild(option);
+            });
+        }
+        
+        function clearLogs() {
+            const cleared = debugLogger.clear();
+            updateLogDisplay();
+            updateCategoryFilter();
+        }
+        
+        function exportLogs() {
+            const data = debugLogger.exportLogs();
+            const blob = new Blob([data], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `debug-logs-${new Date().toISOString().replace(/[:.]/g, '-')}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            debugLogger.info('system', 'Логи экспортированы');
+        }
+        
+        // === ОСНОВНЫЕ ФУНКЦИИ ТЕСТИРОВАНИЯ ===
+        
+        function startDiagnostics() {
+            debugLogger.info('diagnostics', 'Запуск полной диагностики системы');
+            
+            // Проверяем BotConstructor
+            checkBotConstructor();
+            
+            // Проверяем Canvas
+            checkCanvas();
+            
+            // Проверяем схему
+            checkSchema();
+            
+            // Обновляем отображение
+            setTimeout(() => {
+                updateCategoryFilter();
+                if (currentTab === 'problems') {
+                    runDiagnostics();
+                }
+            }, 1000);
+        }
+        
+        function checkBotConstructor() {
+            debugLogger.info('initialization', 'Проверка BotConstructor');
+            
+            if (typeof window.BotConstructor === 'undefined') {
+                debugLogger.error('initialization', 'Класс BotConstructor не найден');
+                return false;
+            }
+            
+            if (typeof window.botConstructor === 'undefined') {
+                debugLogger.warn('initialization', 'Экземпляр botConstructor не создан');
+                return false;
+            }
+            
+            if (typeof window.backToDashboard === 'undefined') {
+                debugLogger.warn('initialization', 'Функция backToDashboard не найдена');
+            }
+            
+            debugLogger.info('initialization', 'BotConstructor инициализирован корректно');
+            return true;
+        }
+        
+        function checkCanvas() {
+            debugLogger.info('canvas', 'Проверка Canvas');
+            
+            const canvas = document.getElementById('editorCanvas');
+            if (!canvas) {
+                debugLogger.error('canvas', 'Canvas элемент не найден');
+                return false;
+            }
+            
+            const rect = canvas.getBoundingClientRect();
+            debugLogger.info('canvas', 'Canvas найден', {
+                width: canvas.width,
+                height: canvas.height,
+                visible: rect.width > 0 && rect.height > 0
+            });
+            
+            return true;
+        }
+        
+        function checkSchema() {
+            debugLogger.info('schema', 'Проверка схемы');
+            
+            if (window.botConstructor && window.botConstructor.currentBot) {
+                const bot = window.botConstructor.currentBot;
+                const nodes = bot.configuration?.nodes || [];
+                
+                debugLogger.info('schema', 'Схема найдена', {
+                    botName: bot.name,
+                    nodesCount: nodes.length
+                });
+                
+                return true;
+            } else {
+                debugLogger.warn('schema', 'Активная схема не найдена');
+                return false;
+            }
+        }
+        
+        function testCanvasRedraw() {
+            debugLogger.info('canvas', 'Тест принудительной перерисовки');
+            
+            if (window.botConstructor && typeof window.botConstructor.renderCanvas === 'function') {
+                try {
+                    window.botConstructor.renderCanvas();
+                    debugLogger.info('canvas', 'Перерисовка выполнена успешно');
+                } catch (error) {
+                    debugLogger.error('canvas', 'Ошибка при перерисовке', error);
+                }
+            } else {
+                debugLogger.error('canvas', 'Метод renderCanvas недоступен');
+            }
+        }
+        
+        function loadTestSchema() {
+            debugLogger.info('schema', 'Загрузка тестовой схемы');
+            
+            // Создаем простую тестовую схему
+            const testSchema = {
+                nodes: [
+                    { id: 'start', type: 'start', position: { x: 50, y: 50 } },
+                    { id: 'message', type: 'message', position: { x: 200, y: 50 }, config: { text: 'Тестовое сообщение' } },
+                    { id: 'end', type: 'condition', position: { x: 350, y: 50 } }
+                ],
+                connections: [
+                    { from: 'start', to: 'message' },
+                    { from: 'message', to: 'end' }
+                ]
+            };
+            
+            if (window.botConstructor) {
+                try {
+                    // Имитируем загрузку бота с тестовой схемой
+                    window.botConstructor.currentBot = {
+                        name: 'Тестовый бот',
+                        configuration: testSchema
+                    };
+                    
+                    if (typeof window.botConstructor.displayBotSchema === 'function') {
+                        window.botConstructor.displayBotSchema();
+                    }
+                    
+                    debugLogger.info('schema', 'Тестовая схема загружена', testSchema);
+                } catch (error) {
+                    debugLogger.error('schema', 'Ошибка загрузки тестовой схемы', error);
+                }
+            } else {
+                debugLogger.error('schema', 'BotConstructor недоступен для загрузки схемы');
+            }
+        }
+        
+        function clearCanvas() {
+            debugLogger.info('canvas', 'Очистка Canvas');
+            
+            const canvas = document.getElementById('editorCanvas');
+            if (canvas) {
+                const ctx = canvas.getContext('2d');
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                debugLogger.info('canvas', 'Canvas очищен');
+            } else {
+                debugLogger.error('canvas', 'Canvas не найден для очистки');
+            }
+        }
+        
+        function forceInitBotConstructor() {
+            debugLogger.info('initialization', 'Принудительная инициализация BotConstructor');
+            
+            try {
+                if (typeof window.BotConstructor === 'function' && !window.botConstructor) {
+                    window.botConstructor = new window.BotConstructor();
+                    debugLogger.info('initialization', 'BotConstructor принудительно инициализирован');
+                } else if (window.botConstructor) {
+                    debugLogger.info('initialization', 'BotConstructor уже инициализирован');
+                } else {
+                    debugLogger.error('initialization', 'Класс BotConstructor недоступен');
+                }
+            } catch (error) {
+                debugLogger.error('initialization', 'Ошибка принудительной инициализации', error);
+            }
+        }
+        
+        function exportDebugData() {
+            debugLogger.info('system', 'Экспорт полных отладочных данных');
+            
+            const debugData = {
+                timestamp: new Date().toISOString(),
+                logs: debugLogger.exportLogs(),
+                systemInfo: {
+                    userAgent: navigator.userAgent,
+                    url: window.location.href,
+                    viewport: { width: window.innerWidth, height: window.innerHeight }
+                },
+                botConstructorState: {
+                    classExists: typeof window.BotConstructor !== 'undefined',
+                    instanceExists: typeof window.botConstructor !== 'undefined',
+                    backToDashboardExists: typeof window.backToDashboard !== 'undefined'
+                },
+                canvasState: getCanvasState(),
+                schemaState: getSchemaState()
+            };
+            
+            const blob = new Blob([JSON.stringify(debugData, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `visual-editor-debug-${new Date().toISOString().replace(/[:.]/g, '-')}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            debugLogger.info('system', 'Отладочные данные экспортированы');
+        }
+        
+        // === ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ===
+        
+        function getCanvasState() {
+            const canvas = document.getElementById('editorCanvas');
+            if (!canvas) return null;
+            
+            const rect = canvas.getBoundingClientRect();
+            return {
+                width: canvas.width,
+                height: canvas.height,
+                visible: rect.width > 0 && rect.height > 0,
+                position: { x: rect.left, y: rect.top }
+            };
+        }
+        
+        function getSchemaState() {
+            if (!window.botConstructor || !window.botConstructor.currentBot) {
+                return null;
+            }
+            
+            const bot = window.botConstructor.currentBot;
+            const nodes = bot.configuration?.nodes || [];
+            
+            return {
+                botName: bot.name,
+                nodesCount: nodes.length,
+                nodes: nodes.map(node => ({
+                    id: node.id,
+                    type: node.type,
+                    hasPosition: !!node.position
+                }))
+            };
+        }
+        
+        function refreshCanvasInfo() {
+            const state = getCanvasState();
+            if (state) {
+                document.getElementById('canvasWidth').textContent = state.width;
+                document.getElementById('canvasHeight').textContent = state.height;
+            }
+        }
+        
+        function inspectSchema() {
+            const state = getSchemaState();
+            if (state) {
+                document.getElementById('totalNodes').textContent = state.nodesCount;
+                // Дополнительная логика инспекции будет добавлена позже
+            }
+        }
+        
+        function runDiagnostics() {
+            // Заглушка для диагностики проблем
+            debugLogger.info('diagnostics', 'Запуск диагностики проблем');
+        }
+        
+        function validateCanvas() {
+            debugLogger.info('canvas', 'Валидация Canvas');
+            checkCanvas();
+        }
+        
+        function validateSchema() {
+            debugLogger.info('schema', 'Валидация схемы');
+            checkSchema();
+        }
+        
+        function applyAutoFixes() {
+            debugLogger.info('autofix', 'Применение автоматических исправлений');
+            // Логика автоисправлений будет добавлена позже
+        }
+    </script>
+</body>
+</html>

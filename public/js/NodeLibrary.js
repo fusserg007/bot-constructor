@@ -1443,6 +1443,42 @@ class NodeLibrary {
 
         return compatibleNodes;
     }
+
+    /**
+     * Получает все узлы
+     */
+    getAllNodes() {
+        return Object.keys(this.nodeTypes).map(type => ({
+            type: type,
+            ...this.nodeTypes[type]
+        }));
+    }
+
+    /**
+     * Получает узлы по категории
+     */
+    getNodesByCategory(category) {
+        return Object.keys(this.nodeTypes)
+            .filter(type => this.nodeTypes[type].category === category)
+            .map(type => ({
+                type: type,
+                ...this.nodeTypes[type]
+            }));
+    }
+
+    /**
+     * Получает информацию о узле по типу
+     */
+    getNodeType(type) {
+        return this.nodeTypes[type] || null;
+    }
+
+    /**
+     * Получает все категории
+     */
+    getCategories() {
+        return this.categories;
+    }
 }
 
 // Глобальная переменная для доступа
