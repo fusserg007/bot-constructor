@@ -294,19 +294,7 @@ ${error.stack || ''}</pre>
 // Создаем глобальный экземпляр менеджера
 window.botConstructorManager = new BotConstructorManager();
 
-// Автоматическая инициализация при загрузке
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => {
-        window.botConstructorManager.initialize().catch(error => {
-            console.error('💥 Критическая ошибка инициализации:', error);
-        });
-    });
-} else {
-    // DOM уже загружен
-    window.botConstructorManager.initialize().catch(error => {
-        console.error('💥 Критическая ошибка инициализации:', error);
-    });
-}
+// Автоинициализация отключена - инициализация происходит вручную из index.html
 
 // Экспорт для использования в других модулях
 window.BotConstructorManager = BotConstructorManager;

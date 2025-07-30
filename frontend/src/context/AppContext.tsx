@@ -6,10 +6,14 @@ interface Bot {
   name: string;
   description: string;
   status: 'active' | 'draft' | 'paused';
+  platforms?: string[];
+  createdAt?: string;
+  updatedAt?: string;
   stats: {
     messagesProcessed: number;
     activeUsers: number;
     lastActivity: string;
+    uptime?: number;
   };
   configuration?: {
     nodes: any[];

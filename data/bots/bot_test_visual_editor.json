@@ -6,6 +6,7 @@
   "description": "Бот для тестирования визуального редактора",
   "userId": 123456,
   "status": "draft",
+  "platforms": ["telegram"],
   "configuration": {
     "nodes": [
       {

@@ -18,272 +18,153 @@ class Logger {
     /**
      * Записывает событие в лог бота
      * @param {string} botId - ID бота
-     * @param {string} eventType - Тип события (message, command, error, etc.)
-     * @param {Object} data - Данные события
+     * @param {string} level - Уровень лога (info, warn, error)
+     * @param {string} message - Сообщение
+     * @param {Object} data - Дополнительные данные
      */
-    async logBotEvent(botId, eventType, data = {}) {
-        const timestamp = data.timestamp ? new Date(data.timestamp) : new Date();
-        const monthKey = this.getMonthKey(timestamp);
-        const logFile = path.join(this.logsDir, `${botId}_${monthKey}.json`);
-
+    async logBotEvent(botId, level, message, data = {}) {
+        const timestamp = new Date().toISOString();
         const logEntry = {
-            timestamp: timestamp.toISOString(),
-            eventType,
-            data: { ...data },
-            botId
+            timestamp,
+            level,
+            message,
+            data
         };
 
-        // Удаляем timestamp из data, чтобы не дублировать
-        if (logEntry.data.timestamp) {
-            delete logEntry.data.timestamp;
-        }
+        const logFile = path.join(this.logsDir, `bot_${botId}.log`);
+        const logLine = JSON.stringify(logEntry) + '\n';
 
         try {
-            // Читаем существующие логи или создаем новый массив
-            let logs = [];
-            try {
-                const existingData = await fs.readFile(logFile, 'utf8');
-                logs = JSON.parse(existingData);
-            } catch (error) {
-                // Файл не существует, создаем новый
-                logs = [];
-            }
-
-            // Добавляем новую запись
-            logs.push(logEntry);
-
-            // Ограничиваем размер лога (максимум 10000 записей на месяц)
-            if (logs.length > 10000) {
-                logs = logs.slice(-10000);
-            }
-
-            // Записываем обратно в файл
-            await fs.writeFile(logFile, JSON.stringify(logs, null, 2));
+            await fs.appendFile(logFile, logLine);
         } catch (error) {
-            console.error('Error writing to log file:', error);
+            console.error('Ошибка записи в лог:', error);
         }
     }
 
     /**
-     * Получает логи бота за определенный период
-     * @param {string} botId - ID бота
-     * @param {Date} startDate - Начальная дата
-     * @param {Date} endDate - Конечная дата
-     * @param {string} eventType - Фильтр по типу события (опционально)
-     * @returns {Array} Массив логов
+     * Записывает системное событие
+     */
+    async logSystemEvent(level, message, data = {}) {
+        const timestamp = new Date().toISOString();
+        const logEntry = {
+            timestamp,
+            level,
+            message,
+            data
+        };
+
+        const logFile = path.join(this.logsDir, 'system.log');
+        const logLine = JSON.stringify(logEntry) + '\n';
+
+        try {
+            await fs.appendFile(logFile, logLine);
+        } catch (error) {
+            console.error('Ошибка записи в системный лог:', error);
+        }
+    }
+
+    /**
+     * Получает логи бота
      */
     async getBotLogs(botId, startDate, endDate, eventType = null) {
-        const logs = [];
-        const months = this.getMonthsBetween(startDate, endDate);
-
-        for (const monthKey of months) {
-            const logFile = path.join(this.logsDir, `${botId}_${monthKey}.json`);
+        const logFile = path.join(this.logsDir, `bot_${botId}.log`);
+        
+        try {
+            const data = await fs.readFile(logFile, 'utf8');
+            const lines = data.trim().split('\n').filter(line => line);
             
-            try {
-                const data = await fs.readFile(logFile, 'utf8');
-                const monthLogs = JSON.parse(data);
-                
-                // Фильтруем по дате и типу события
-                const filteredLogs = monthLogs.filter(log => {
-                    const logDate = new Date(log.timestamp);
-                    const inDateRange = logDate >= startDate && logDate <= endDate;
-                    const matchesEventType = !eventType || log.eventType === eventType;
-                    return inDateRange && matchesEventType;
-                });
+            let logs = lines.map(line => {
+                try {
+                    return JSON.parse(line);
+                } catch (error) {
+                    return null;
+                }
+            }).filter(log => log !== null);
 
-                logs.push(...filteredLogs);
-            } catch (error) {
-                // Файл не существует для этого месяца, пропускаем
-                continue;
+            // Фильтрация по дате
+            if (startDate) {
+                logs = logs.filter(log => new Date(log.timestamp) >= startDate);
             }
-        }
+            if (endDate) {
+                logs = logs.filter(log => new Date(log.timestamp) <= endDate);
+            }
 
-        return logs.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+            // Фильтрация по типу события
+            if (eventType) {
+                logs = logs.filter(log => log.level === eventType);
+            }
+
+            return logs;
+        } catch (error) {
+            return [];
+        }
     }
 
     /**
      * Получает статистику бота
-     * @param {string} botId - ID бота
-     * @param {Date} startDate - Начальная дата
-     * @param {Date} endDate - Конечная дата
-     * @returns {Object} Объект со статистикой
      */
     async getBotStats(botId, startDate, endDate) {
         const logs = await this.getBotLogs(botId, startDate, endDate);
         
         const stats = {
             totalEvents: logs.length,
-            messagesProcessed: 0,
-            commandsExecuted: 0,
-            errorsCount: 0,
-            activeUsers: new Set(),
-            eventsByType: {},
-            dailyActivity: {},
-            hourlyActivity: Array(24).fill(0)
+            messagesProcessed: logs.filter(log => log.message.includes('message')).length,
+            errorsCount: logs.filter(log => log.level === 'error').length,
+            warningsCount: logs.filter(log => log.level === 'warn').length,
+            activeUsers: new Set(logs.map(log => log.data?.userId).filter(id => id)).size,
+            lastActivity: logs.length > 0 ? logs[logs.length - 1].timestamp : null
         };
 
-        logs.forEach(log => {
-            // Подсчет по типам событий
-            stats.eventsByType[log.eventType] = (stats.eventsByType[log.eventType] || 0) + 1;
-
-            // Специфичные подсчеты
-            if (log.eventType === 'message') {
-                stats.messagesProcessed++;
-                if (log.data && log.data.userId) {
-                    stats.activeUsers.add(log.data.userId.toString());
-                }
-            } else if (log.eventType === 'command') {
-                stats.commandsExecuted++;
-                if (log.data && log.data.userId) {
-                    stats.activeUsers.add(log.data.userId.toString());
-                }
-            } else if (log.eventType === 'action') {
-                if (log.data && log.data.userId) {
-                    stats.activeUsers.add(log.data.userId.toString());
-                }
-            } else if (log.eventType === 'error') {
-                stats.errorsCount++;
-            }
-
-            // Активность по дням
-            const date = new Date(log.timestamp).toISOString().split('T')[0];
-            stats.dailyActivity[date] = (stats.dailyActivity[date] || 0) + 1;
-
-            // Активность по часам
-            const hour = new Date(log.timestamp).getHours();
-            stats.hourlyActivity[hour]++;
-        });
-
-        stats.activeUsers = stats.activeUsers.size;
-        
         return stats;
     }
 
     /**
-     * Логирует сообщение от пользователя
+     * Очищает старые логи
      */
-    async logMessage(botId, userId, messageText, messageType = 'text') {
-        await this.logBotEvent(botId, 'message', {
-            userId,
-            messageText: messageText?.substring(0, 200), // Ограничиваем длину
-            messageType
-        });
-    }
-
-    /**
-     * Логирует выполнение команды
-     */
-    async logCommand(botId, userId, command, args = []) {
-        await this.logBotEvent(botId, 'command', {
-            userId,
-            command,
-            args
-        });
-    }
-
-    /**
-     * Логирует ошибку
-     */
-    async logError(botId, error, context = {}) {
-        await this.logBotEvent(botId, 'error', {
-            error: error.message,
-            stack: error.stack,
-            context
-        });
-    }
-
-    /**
-     * Логирует действие бота
-     */
-    async logAction(botId, actionType, data = {}) {
-        await this.logBotEvent(botId, 'action', {
-            actionType,
-            ...data
-        });
-    }
-
-    /**
-     * Логирует системное событие
-     */
-    async logSystemEvent(eventType, data = {}) {
-        const logEntry = {
-            timestamp: new Date().toISOString(),
-            eventType: 'system_' + eventType,
-            data
-        };
-
-        try {
-            const monthKey = this.getMonthKey(new Date());
-            const logFile = path.join(this.logsDir, `system_${monthKey}.json`);
-            
-            let logs = [];
-            try {
-                const data = await fs.readFile(logFile, 'utf8');
-                logs = JSON.parse(data);
-            } catch (error) {
-                // Файл не существует, создаем новый массив
-            }
-
-            logs.push(logEntry);
-            await fs.writeFile(logFile, JSON.stringify(logs, null, 2));
-        } catch (error) {
-            console.error('Error logging system event:', error);
-        }
-    }
-
-    /**
-     * Получает ключ месяца в формате YYYY-MM
-     */
-    getMonthKey(date) {
-        return date.toISOString().substring(0, 7);
-    }
-
-    /**
-     * Получает список месяцев между двумя датами
-     */
-    getMonthsBetween(startDate, endDate) {
-        const months = new Set();
-        
-        // Добавляем месяц начальной даты
-        months.add(this.getMonthKey(startDate));
-        
-        // Добавляем месяц конечной даты
-        months.add(this.getMonthKey(endDate));
-        
-        // Добавляем все месяцы между ними
-        const current = new Date(startDate.getFullYear(), startDate.getMonth(), 1);
-        const end = new Date(endDate.getFullYear(), endDate.getMonth(), 1);
-
-        while (current <= end) {
-            months.add(this.getMonthKey(current));
-            current.setMonth(current.getMonth() + 1);
-        }
-
-        return Array.from(months).sort();
-    }
-
-    /**
-     * Очищает старые логи (старше указанного количества месяцев)
-     */
-    async cleanupOldLogs(monthsToKeep = 12) {
+    async cleanupOldLogs(daysToKeep = 30) {
         try {
             const files = await fs.readdir(this.logsDir);
             const cutoffDate = new Date();
-            cutoffDate.setMonth(cutoffDate.getMonth() - monthsToKeep);
-            const cutoffKey = this.getMonthKey(cutoffDate);
+            cutoffDate.setDate(cutoffDate.getDate() - daysToKeep);
 
             for (const file of files) {
-                if (file.endsWith('.json')) {
-                    const monthKey = file.split('_').pop().replace('.json', '');
-                    if (monthKey < cutoffKey) {
-                        await fs.unlink(path.join(this.logsDir, file));
-                        console.log(`Deleted old log file: ${file}`);
-                    }
+                const filePath = path.join(this.logsDir, file);
+                const stats = await fs.stat(filePath);
+                
+                if (stats.mtime < cutoffDate) {
+                    await fs.unlink(filePath);
+                    console.log(`Удален старый лог файл: ${file}`);
                 }
             }
         } catch (error) {
-            console.error('Error cleaning up old logs:', error);
+            console.error('Ошибка очистки логов:', error);
         }
+    }
+
+    // Удобные методы для разных уровней логирования
+    info(botId, message, data) {
+        return this.logBotEvent(botId, 'info', message, data);
+    }
+
+    warn(botId, message, data) {
+        return this.logBotEvent(botId, 'warn', message, data);
+    }
+
+    error(botId, message, data) {
+        return this.logBotEvent(botId, 'error', message, data);
+    }
+
+    // Системные логи
+    systemInfo(message, data) {
+        return this.logSystemEvent('info', message, data);
+    }
+
+    systemWarn(message, data) {
+        return this.logSystemEvent('warn', message, data);
+    }
+
+    systemError(message, data) {
+        return this.logSystemEvent('error', message, data);
     }
 }
 

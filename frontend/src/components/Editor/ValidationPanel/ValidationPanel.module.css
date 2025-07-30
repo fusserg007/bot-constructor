@@ -77,6 +77,27 @@
   background: #e5e7eb;
 }
 
+.closeButton {
+  background: none;
+  border: none;
+  font-size: 14px;
+  color: #6b7280;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.closeButton:hover {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
 .content {
   max-height: 400px;
   overflow-y: auto;
@@ -132,6 +153,14 @@
   color: #f59e0b;
 }
 
+.successIcon {
+  color: #10b981;
+}
+
+.infoIcon {
+  color: #3b82f6;
+}
+
 .issueList {
   display: flex;
   flex-direction: column;
@@ -162,6 +191,21 @@
 
 .issue.warning:hover {
   background: #fef3c7;
+}
+
+.issue.success {
+  background: #f0fdf4;
+  border-left-color: #10b981;
+  cursor: default;
+}
+
+.issue.info {
+  background: #eff6ff;
+  border-left-color: #3b82f6;
+}
+
+.issue.info:hover {
+  background: #dbeafe;
 }
 
 .issueMessage {
@@ -204,6 +248,7 @@
 .actions {
   display: flex;
   justify-content: center;
+  gap: 12px;
   padding-top: 16px;
   border-top: 1px solid #e5e7eb;
   margin-top: 16px;
@@ -227,6 +272,21 @@
 .validateButton:disabled {
   background: #9ca3af;
   cursor: not-allowed;
+}
+
+.clearButton {
+  background: #6b7280;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.clearButton:hover {
+  background: #4b5563;
 }
 
 /* Статистика схемы */

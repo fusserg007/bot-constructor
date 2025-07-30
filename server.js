@@ -3,7 +3,6 @@ const cors = require('cors');
 const bodyParser = require('body-parser');
 const path = require('path');
 const fs = require('fs');
-const ProcessManager = require('./utils/ProcessManager');
 
 const app = express();
 const PORT = process.env.PORT || 3002;
@@ -27,11 +26,11 @@ app.use((req, res, next) => {
   res.removeHeader('Content-Security-Policy-Report-Only');
   res.removeHeader('X-Content-Security-Policy');
   res.removeHeader('X-WebKit-CSP');
-  
+
   // Добавляем заголовки для отключения других ограничений безопасности
   res.setHeader('X-Frame-Options', 'SAMEORIGIN');
   res.setHeader('X-Content-Type-Options', 'nosniff');
-  
+
   next();
 });
 
@@ -147,7 +146,7 @@ app.use('/api/templates', templatesRoutes);
 app.use('/api/visual-schemas', visualSchemasRoutes);
 app.use('/api/stats', statsRoutes);
 app.use('/api/performance', require('./routes/performance'));
-app.use('/api/help', require('./routes/help'));
+// app.use('/api/help', require('./routes/help')); // Отключено
 app.use('/api/logs', require('./routes/logs'));
 app.use('/api/debug', require('./routes/debug'));
 app.use('/api/bots', require('./routes/platforms'));
@@ -267,22 +266,18 @@ app.get('/react-debug.html', (req, res) => {
 // Главный маршрут - React приложение
 app.get('*', (req, res) => {
   // Исключаем API маршруты и статические файлы
-  if (req.path.startsWith('/api/') || 
-      req.path.startsWith('/assets/') || 
-      req.path.includes('.')) {
+  if (req.path.startsWith('/api/') ||
+    req.path.startsWith('/assets/') ||
+    req.path.includes('.')) {
     return res.status(404).send('Not found');
   }
-  
+
   // Отправляем React приложение
   res.sendFile(path.join(__dirname, 'public', 'dist', 'index.html'));
 });
 
 // Запуск сервера
 const startServer = async () => {
-  // Инициализируем ProcessManager
-  const processManager = new ProcessManager();
-  await processManager.initialize();
-
   createDataDirectories();
 
   app.listen(PORT, async () => {
@@ -299,6 +294,20 @@ const startServer = async () => {
     }
   });
 };
+
+// React Router - catch-all для SPA
+app.get('*', (req, res) => {
+  // Исключаем API роуты
+  if (req.path.startsWith('/api/') ||
+    req.path.startsWith('/legacy/') ||
+    req.path.startsWith('/data/') ||
+    req.path.includes('.')) {
+    return res.status(404).json({ error: 'Not found' });
+  }
+
+  // Отправляем React приложение для всех остальных роутов
+  res.sendFile(path.join(__dirname, 'public', 'dist', 'index.html'));
+});
 
 startServer();
 

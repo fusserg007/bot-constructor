@@ -61,7 +61,8 @@
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: all 0.2s ease;
+  min-width: 120px;
 }
 
 .saveButton:hover:not(:disabled) {
@@ -69,8 +70,36 @@
 }
 
 .saveButton:disabled {
-  background: #9ca3af;
   cursor: not-allowed;
+}
+
+.saveButton.saving {
+  background: #ffc107;
+  color: #333;
+}
+
+.saveButton.saved {
+  background: #28a745;
+  color: white;
+}
+
+.saveButton.error {
+  background: #dc3545;
+  color: white;
+}
+
+.saveMessage {
+  margin-left: 10px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.saveMessage.saved {
+  color: #28a745;
+}
+
+.saveMessage.error {
+  color: #dc3545;
 }
 
 .helpButton {
@@ -111,6 +140,8 @@
   flex: 1;
   position: relative;
   background: #ffffff;
+  height: 100%;
+  overflow: hidden;
 }
 
 /* React Flow стили */

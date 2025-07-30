@@ -945,6 +945,13 @@ class BotConstructor {
             return;
         }
         
+        // Устанавливаем размеры Canvas если они не заданы
+        if (canvas.width === 0 || canvas.height === 0) {
+            canvas.width = 800;
+            canvas.height = 600;
+            this.logger.info?.('canvas', 'Установлены размеры Canvas: 800x600');
+        }
+        
         this.logger.debug?.('canvas', 'Canvas найден, очистка...') || console.log('Canvas найден, очистка...');
         const ctx = canvas.getContext('2d');
         ctx.clearRect(0, 0, canvas.width, canvas.height);

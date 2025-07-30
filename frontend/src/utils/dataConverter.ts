@@ -38,7 +38,9 @@ function getCategoryIcon(category: BaseNode['category']): string {
 interface LegacyNode {
   id: string;
   type: string;
-  data: any;
+  data?: any;
+  config?: any;
+  position?: { x: number; y: number };
   connections?: string[];
 }
 
@@ -65,16 +67,16 @@ export function convertLegacyToReactFlow(legacyConfig: LegacyConfiguration): { n
     const node: Node = {
       id: legacyNode.id,
       type: convertNodeType(legacyNode.type),
-      position: { x: 100 + (index * 200), y: 100 + (Math.floor(index / 3) * 150) },
+      position: legacyNode.position || { x: 100 + (index * 200), y: 100 + (Math.floor(index / 3) * 150) },
       data: {
         ...nodeData,
-        position: { x: 100 + (index * 200), y: 100 + (Math.floor(index / 3) * 150) }
+        position: legacyNode.position || { x: 100 + (index * 200), y: 100 + (Math.floor(index / 3) * 150) }
       }
     };
     nodes.push(node);
   });
 
-  // Конвертируем соединения из старого формата
+  // Конвертируем соединения из старого формата (connections в узлах)
   legacyConfig.nodes.forEach((legacyNode) => {
     if (legacyNode.connections && Array.isArray(legacyNode.connections)) {
       legacyNode.connections.forEach((targetId, index) => {
@@ -89,6 +91,21 @@ export function convertLegacyToReactFlow(legacyConfig: LegacyConfiguration): { n
     }
   });
 
+  // Конвертируем соединения из нового формата (connections в корне конфигурации)
+  if (legacyConfig.connections && Array.isArray(legacyConfig.connections)) {
+    legacyConfig.connections.forEach((connection) => {
+      const edge: Edge = {
+        id: connection.id || `${connection.sourceNodeId}-${connection.targetNodeId}`,
+        source: connection.sourceNodeId,
+        target: connection.targetNodeId,
+        sourceHandle: connection.sourceOutput,
+        targetHandle: connection.targetInput,
+        type: 'default'
+      };
+      edges.push(edge);
+    });
+  }
+
   return { nodes, edges };
 }
 
@@ -97,14 +114,50 @@ export function convertLegacyToReactFlow(legacyConfig: LegacyConfiguration): { n
  */
 function convertNodeType(legacyType: string): string {
   const typeMapping: Record<string, string> = {
-    'action': 'action-node',
-    'trigger': 'trigger-node',
-    'condition': 'condition-node',
-    'data': 'data-node',
-    'integration': 'integration-node'
+    // Основные типы
+    'action': 'action-send-message',
+    'trigger': 'trigger-message',
+    'condition': 'condition-text-contains',
+    'data': 'data-save',
+    'integration': 'integration-http',
+    'scenario': 'scenario-welcome',
+    
+    // Триггеры
+    'command': 'trigger-command',
+    'message': 'trigger-message',
+    'callback': 'trigger-callback',
+    'inline_query': 'trigger-inline',
+    
+    // Действия
+    'send_message': 'action-send-message',
+    'send_photo': 'action-send-photo',
+    'send_video': 'action-send-video',
+    'send_audio': 'action-send-audio',
+    'send_document': 'action-send-document',
+    'edit_message': 'action-edit-message',
+    'delete_message': 'action-delete-message',
+    
+    // Условия
+    'text_check': 'condition-text-contains',
+    'user_check': 'condition-user-role',
+    'time_check': 'condition-time',
+    'data_check': 'condition-variable',
+    
+    // Данные
+    'random_number': 'data-variable-set',
+    'save_data': 'data-save',
+    'load_data': 'data-load',
+    'variable_set': 'data-variable-set',
+    'variable_get': 'data-variable-get',
+    
+    // Интеграции
+    'http_request': 'integration-http',
+    'webhook': 'integration-webhook',
+    'database': 'integration-database',
+    'api_call': 'integration-api'
   };
 
-  return typeMapping[legacyType] || 'action-node';
+  return typeMapping[legacyType] || 'action-send-message';
 }
 
 /**
@@ -112,33 +165,60 @@ function convertNodeType(legacyType: string): string {
  */
 function convertNodeData(legacyNode: LegacyNode): BaseNode {
   const data = legacyNode.data || {};
+  const nodeConfig = legacyNode.config || data.config || {};
   
-  // Определяем категорию на основе типа или данных
+  // Определяем категорию на основе типа узла
   let category: BaseNode['category'] = 'actions';
   
-  if (data.triggerType || data.actionType === 'trigger') {
+  // Улучшенное определение категории
+  if (legacyNode.type === 'command' || legacyNode.type === 'trigger' || 
+      data.triggerType || legacyNode.type.includes('trigger')) {
     category = 'triggers';
-  } else if (data.conditionType) {
-    category = 'conditions';
-  } else if (data.dataType) {
+  } else if (legacyNode.type === 'send_message' || legacyNode.type === 'action' ||
+             data.actionType === 'send_message' || legacyNode.type.includes('send_')) {
+    category = 'actions';
+  } else if (legacyNode.type === 'random_number' || legacyNode.type === 'data' ||
+             data.actionType === 'random_number' || legacyNode.type.includes('data_') ||
+             legacyNode.type.includes('variable_')) {
     category = 'data';
-  } else if (data.integrationType) {
+  } else if (legacyNode.type === 'condition' || data.conditionType || 
+             legacyNode.type.includes('check') || legacyNode.type.includes('condition')) {
+    category = 'conditions';
+  } else if (data.integrationType || legacyNode.type.includes('integration') ||
+             legacyNode.type.includes('http') || legacyNode.type.includes('api')) {
     category = 'integrations';
+  } else if (legacyNode.type.includes('scenario')) {
+    category = 'scenarios';
   }
 
-  // Создаем конфигурацию узла
-  const config: Record<string, any> = {};
+  // Создаем конфигурацию узла, объединяя данные из разных источников
+  const config: Record<string, any> = {
+    ...data,
+    ...nodeConfig
+  };
   
-  // Копируем все свойства из старых данных в конфигурацию
-  Object.keys(data).forEach(key => {
-    if (key !== 'actionType' || data.actionType !== 'trigger') {
-      config[key] = data[key];
-    }
-  });
+  // Удаляем служебные поля
+  delete config.actionType;
+  delete config.config;
 
-  // Специальная обработка для триггеров
-  if (category === 'triggers' && data.actionType === 'trigger') {
-    config.triggerType = data.triggerType || 'command';
+  // Специальная обработка для разных типов узлов
+  if (category === 'triggers') {
+    if (legacyNode.type === 'command') {
+      config.triggerType = 'command';
+      config.label = `Команда: ${config.command || '/start'}`;
+    } else {
+      config.triggerType = config.triggerType || 'message';
+      config.label = config.label || 'Триггер сообщения';
+    }
+  } else if (category === 'actions') {
+    config.actionType = config.actionType || 'send_message';
+    config.label = config.label || `Отправить: ${config.text || config.message || 'сообщение'}`;
+  } else if (category === 'conditions') {
+    config.conditionType = config.conditionType || 'text_contains';
+    config.label = config.label || 'Проверка условия';
+  } else if (category === 'data') {
+    config.dataType = config.dataType || 'variable';
+    config.label = config.label || 'Работа с данными';
   }
 
   // Создаем порты для узла
@@ -148,23 +228,25 @@ function convertNodeData(legacyNode: LegacyNode): BaseNode {
       name: 'Вход',
       type: 'control',
       dataType: 'any',
-      required: false
+      required: false,
+      multiple: false
     }
   ];
 
-  const outputs: NodePort[] = category === 'actions' && !config.actionType?.includes('send') ? [] : [
+  const outputs: NodePort[] = [
     {
       id: 'output',
       name: 'Выход',
       type: 'control',
       dataType: 'any',
-      required: false
+      required: false,
+      multiple: true
     }
   ];
 
   return {
     id: legacyNode.id,
-    type: legacyNode.type,
+    type: convertNodeType(legacyNode.type), // Используем конвертированный тип для React Flow
     category,
     position: { x: 0, y: 0 }, // Будет установлено в основной функции
     size: { width: 200, height: 100 },
@@ -173,7 +255,7 @@ function convertNodeData(legacyNode: LegacyNode): BaseNode {
     inputs,
     outputs,
     config,
-    name: config.name || `${category} узел`,
+    name: config.label || config.name || `${category} узел`,
     description: config.description || '',
     tags: [],
     compatibility: []
@@ -189,11 +271,13 @@ export function isLegacyFormat(config: any): boolean {
   }
 
   // Проверяем, есть ли у узлов поле connections (старый формат)
-  // или отсутствует поле edges (новый формат)
-  const hasConnections = config.nodes.some((node: any) => node.connections);
+  // или есть поле connections в корне (промежуточный формат)
+  // или отсутствует поле edges (новый формат React Flow)
+  const hasNodeConnections = config.nodes.some((node: any) => node.connections);
+  const hasRootConnections = Array.isArray(config.connections);
   const hasEdges = Array.isArray(config.edges);
   
-  return hasConnections || !hasEdges;
+  return hasNodeConnections || hasRootConnections || !hasEdges;
 }
 
 /**

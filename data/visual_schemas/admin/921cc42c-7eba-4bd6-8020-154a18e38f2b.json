@@ -1,0 +1,40 @@
+{
+  "id": "921cc42c-7eba-4bd6-8020-154a18e38f2b",
+  "name": "Test Schema",
+  "createdAt": "2025-07-29T06:02:10.025Z",
+  "updatedAt": "2025-07-29T06:02:10.025Z",
+  "nodes": [
+    {
+      "category": "trigger",
+      "id": "",
+      "type": "start"
+    },
+    {
+      "category": "action",
+      "id": "node2",
+      "type": ""
+    },
+    {
+      "category": "",
+      "id": "node3",
+      "type": "message"
+    }
+  ],
+  "connections": [
+    {
+      "targetNodeId": "node2",
+      "id": "",
+      "sourceNodeId": "node1"
+    },
+    {
+      "targetNodeId": "node3",
+      "id": "conn2",
+      "sourceNodeId": "nonexistent"
+    }
+  ],
+  "viewport": {
+    "x": 0,
+    "y": 0,
+    "scale": 1
+  }
+}

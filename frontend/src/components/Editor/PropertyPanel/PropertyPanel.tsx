@@ -1,5 +1,6 @@
 import React from 'react';
 import type { Node } from 'reactflow';
+import { getFieldTranslation, getNodeTypeTranslation } from '../../../utils/localization';
 import styles from './PropertyPanel.module.css';
 
 interface PropertyPanelProps {
@@ -37,12 +38,71 @@ const PropertyPanel: React.FC<PropertyPanelProps> = ({ selectedNode, onNodeUpdat
     );
   }
 
+  const getSelectOptions = (key: string) => {
+    switch (key) {
+      case 'condition':
+        return [
+          { value: 'contains', label: 'содержит' },
+          { value: 'equals', label: 'равно' },
+          { value: 'startsWith', label: 'начинается с' },
+          { value: 'endsWith', label: 'заканчивается на' },
+          { value: 'regex', label: 'регулярное выражение' }
+        ];
+      case 'parseMode':
+        return [
+          { value: 'HTML', label: 'HTML' },
+          { value: 'Markdown', label: 'Markdown' },
+          { value: 'plain', label: 'обычный текст' }
+        ];
+      case 'messageType':
+      case 'triggerType':
+        return [
+          { value: 'text', label: 'текст' },
+          { value: 'photo', label: 'фото' },
+          { value: 'video', label: 'видео' },
+          { value: 'audio', label: 'аудио' },
+          { value: 'document', label: 'документ' }
+        ];
+      case 'checkType':
+        return [
+          { value: 'isAdmin', label: 'является администратором' },
+          { value: 'isBanned', label: 'заблокирован' },
+          { value: 'hasRole', label: 'имеет роль' }
+        ];
+      default:
+        return null;
+    }
+  };
+
   const renderPropertyField = (key: string, value: any) => {
+    const selectOptions = getSelectOptions(key);
+    
     if (typeof value === 'string') {
+      if (selectOptions) {
+        return (
+          <div key={key} className={styles.field}>
+            <label className={styles.label}>
+              {getFieldTranslation(key)}
+            </label>
+            <select
+              value={value}
+              onChange={(e) => handleInputChange(key, e.target.value)}
+              className={styles.select}
+            >
+              {selectOptions.map(option => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </div>
+        );
+      }
+      
       return (
         <div key={key} className={styles.field}>
           <label className={styles.label}>
-            {key.charAt(0).toUpperCase() + key.slice(1)}
+            {getFieldTranslation(key)}
           </label>
           <input
             type="text"
@@ -58,7 +118,7 @@ const PropertyPanel: React.FC<PropertyPanelProps> = ({ selectedNode, onNodeUpdat
       return (
         <div key={key} className={styles.field}>
           <label className={styles.label}>
-            {key.charAt(0).toUpperCase() + key.slice(1)}
+            {getFieldTranslation(key)}
           </label>
           <input
             type="number"
@@ -80,7 +140,7 @@ const PropertyPanel: React.FC<PropertyPanelProps> = ({ selectedNode, onNodeUpdat
               onChange={(e) => handleInputChange(key, e.target.checked)}
               className={styles.checkbox}
             />
-            {key.charAt(0).toUpperCase() + key.slice(1)}
+            {getFieldTranslation(key)}
           </label>
         </div>
       );
@@ -90,7 +150,7 @@ const PropertyPanel: React.FC<PropertyPanelProps> = ({ selectedNode, onNodeUpdat
       return (
         <div key={key} className={styles.field}>
           <label className={styles.label}>
-            {key.charAt(0).toUpperCase() + key.slice(1)}
+            {getFieldTranslation(key)}
           </label>
           <textarea
             value={value.join('\n')}
@@ -109,33 +169,11 @@ const PropertyPanel: React.FC<PropertyPanelProps> = ({ selectedNode, onNodeUpdat
     <div className={styles.propertyPanel}>
       <div className={styles.header}>
         <h3>Свойства узла</h3>
-        <div className={styles.nodeType}>{selectedNode.type}</div>
+        <div className={styles.nodeType}>{getNodeTypeTranslation(selectedNode.type || '')}</div>
       </div>
 
       <div className={styles.content}>
         <div className={styles.section}>
-          <h4>Основные настройки</h4>
-          
-          <div className={styles.field}>
-            <label className={styles.label}>ID узла</label>
-            <input
-              type="text"
-              value={selectedNode.id}
-              disabled
-              className={`${styles.input} ${styles.disabled}`}
-            />
-          </div>
-
-          <div className={styles.field}>
-            <label className={styles.label}>Тип узла</label>
-            <input
-              type="text"
-              value={selectedNode.type}
-              disabled
-              className={`${styles.input} ${styles.disabled}`}
-            />
-          </div>
-
           <div className={styles.field}>
             <label className={styles.label}>Название</label>
             <input
@@ -143,43 +181,23 @@ const PropertyPanel: React.FC<PropertyPanelProps> = ({ selectedNode, onNodeUpdat
               value={selectedNode.data?.label || ''}
               onChange={(e) => handleInputChange('label', e.target.value)}
               className={styles.input}
+              placeholder="Введите название узла"
             />
           </div>
         </div>
 
         {Object.keys(nodeData).length > 0 && (
           <div className={styles.section}>
-            <h4>Конфигурация</h4>
+            <h4>Настройки</h4>
             {Object.entries(nodeData).map(([key, value]) => {
-              if (key === 'label') return null; // Already handled above
+              // Скрываем технические поля
+              if (['label', 'id', 'type', 'category', 'color', 'icon', 'inputs', 'outputs', 'name', 'description', 'tags', 'compatibility'].includes(key.toLowerCase())) {
+                return null;
+              }
               return renderPropertyField(key, value);
             })}
           </div>
         )}
-
-        <div className={styles.section}>
-          <h4>Позиция</h4>
-          <div className={styles.positionFields}>
-            <div className={styles.field}>
-              <label className={styles.label}>X</label>
-              <input
-                type="number"
-                value={Math.round(selectedNode.position.x)}
-                disabled
-                className={`${styles.input} ${styles.disabled}`}
-              />
-            </div>
-            <div className={styles.field}>
-              <label className={styles.label}>Y</label>
-              <input
-                type="number"
-                value={Math.round(selectedNode.position.y)}
-                disabled
-                className={`${styles.input} ${styles.disabled}`}
-              />
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   );

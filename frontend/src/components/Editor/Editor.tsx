@@ -16,12 +16,12 @@ import 'reactflow/dist/style.css';
 import NodeLibrary from './NodeLibrary/NodeLibrary';
 import PropertyPanel from './PropertyPanel/PropertyPanel';
 import ValidationPanel from './ValidationPanel/ValidationPanel';
-import HelpSystem from '../Help/HelpSystem';
 import { nodeTypes } from './CustomNodes';
 import { validateConnection } from '../../utils/nodeValidation';
 import { SchemaValidator } from '../../utils/SchemaValidator';
 import { convertLegacyToReactFlow, isLegacyFormat } from '../../utils/dataConverter';
 import { useApp } from '../../context/AppContext';
+import { useSaveStatus } from '../../hooks/useSaveStatus';
 import styles from './Editor.module.css';
 
 const initialNodes: Node[] = [
@@ -42,13 +42,14 @@ const initialEdges: Edge[] = [];
 
 const Editor: React.FC = () => {
   const { botId } = useParams<{ botId?: string }>();
-  const { state, fetchBot, saveBot } = useApp();
+  const { state, fetchBot } = useApp();
+  const { saveStatus, saveMessage, saveBot } = useSaveStatus();
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
   const [selectedNode, setSelectedNode] = useState<Node | null>(null);
   const [isValidationPanelVisible, setIsValidationPanelVisible] = useState(false);
-  const [isHelpPanelVisible, setIsHelpPanelVisible] = useState(false);
-  const [validationResult, setValidationResult] = useState({ errors: [], warnings: [] });
+
+  // const [validationResult, setValidationResult] = useState<{ errors: any[], warnings: any[] }>({ errors: [], warnings: [] });
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
   const [reactFlowInstance, setReactFlowInstance] = useState<any>(null);
 
@@ -84,7 +85,7 @@ const Editor: React.FC = () => {
   React.useEffect(() => {
     const validator = new SchemaValidator(nodes, edges);
     const result = validator.validate();
-    setValidationResult(result);
+    // setValidationResult(result);
     
     if (result.errors.length > 0 && !isValidationPanelVisible) {
       setIsValidationPanelVisible(true);
@@ -103,6 +104,12 @@ const Editor: React.FC = () => {
     [setEdges, nodes]
   );
 
+  // Обработчик обновления схемы из ValidationPanel
+  const handleSchemaUpdate = useCallback((updatedNodes: Node[], updatedEdges: Edge[]) => {
+    setNodes(updatedNodes);
+    setEdges(updatedEdges);
+  }, [setNodes, setEdges]);
+
   const onNodeClick = useCallback((_event: React.MouseEvent, node: Node) => {
     setSelectedNode(node);
   }, []);
@@ -110,6 +117,8 @@ const Editor: React.FC = () => {
   const onPaneClick = useCallback(() => {
     setSelectedNode(null);
   }, []);
+
+
 
   const onDragOver = useCallback((event: React.DragEvent) => {
     event.preventDefault();
@@ -176,12 +185,18 @@ const Editor: React.FC = () => {
   };
 
   const handleSave = async () => {
+    console.log('handleSave called, botId:', botId);
+    if (!botId) {
+      console.log('No botId, returning');
+      return;
+    }
+    
     // Валидируем схему перед сохранением с помощью новой системы валидации
     const validator = new SchemaValidator(nodes, edges);
     const validation = validator.validate();
     
     if (!validation.isValid) {
-      const errorMessages = validation.errors.map(e => `• ${e.message}`).join('\n');
+      const errorMessages = validation.errors.map((e: any) => `• ${e.message}`).join('\n');
       alert(`Ошибки в схеме:\n${errorMessages}`);
       setIsValidationPanelVisible(true);
       return;
@@ -189,7 +204,7 @@ const Editor: React.FC = () => {
 
     // Показываем предупреждения, но позволяем сохранить
     if (validation.warnings.length > 0) {
-      const warningMessages = validation.warnings.map(w => `• ${w.message}`).join('\n');
+      const warningMessages = validation.warnings.map((w: any) => `• ${w.message}`).join('\n');
       const proceed = confirm(`Предупреждения в схеме:\n${warningMessages}\n\nПродолжить сохранение?`);
       if (!proceed) {
         setIsValidationPanelVisible(true);
@@ -199,7 +214,7 @@ const Editor: React.FC = () => {
 
     const botData = {
       id: botId,
-      name: state.currentBot?.name || (botId ? 'Обновленный бот' : 'Новый бот'),
+      name: state.currentBot?.name || 'Обновленный бот',
       description: state.currentBot?.description || 'Создан в визуальном редакторе',
       status: state.currentBot?.status || 'draft' as const,
       configuration: {
@@ -221,13 +236,8 @@ const Editor: React.FC = () => {
       }
     };
 
-    try {
-      await saveBot(botData);
-      alert('Бот успешно сохранен!');
-    } catch (error) {
-      console.error('Error saving bot:', error);
-      alert('Ошибка при сохранении бота');
-    }
+    console.log('Calling saveBot with:', botData);
+    await saveBot(botId, botData);
   };
 
   return (
@@ -241,15 +251,20 @@ const Editor: React.FC = () => {
         </div>
         <div className={styles.headerRight}>
           <button 
-            onClick={() => setIsHelpPanelVisible(!isHelpPanelVisible)} 
-            className={styles.helpButton}
-            title="Справка"
+            onClick={handleSave}
+            className={`${styles.saveButton} ${styles[saveStatus]}`}
+            disabled={saveStatus === 'saving'}
           >
-            ❓
+            {saveStatus === 'saving' && '⏳ Сохранение...'}
+            {saveStatus === 'saved' && '✅ Сохранено'}
+            {saveStatus === 'error' && '❌ Ошибка'}
+            {saveStatus === 'idle' && '💾 Сохранить'}
           </button>
-          <button onClick={handleSave} className={styles.saveButton} disabled={state.loading}>
-            {state.loading ? 'Сохранение...' : 'Сохранить'}
-          </button>
+          {saveMessage && (
+            <span className={`${styles.saveMessage} ${styles[saveStatus]}`}>
+              {saveMessage}
+            </span>
+          )}
         </div>
       </header>
 
@@ -263,10 +278,6 @@ const Editor: React.FC = () => {
               data: getDefaultNodeData(nodeType),
             };
             setNodes((nds) => nds.concat(newNode));
-          }}
-          onNodeHelpRequest={(nodeType) => {
-            setSelectedNode({ type: nodeType } as Node);
-            setIsHelpPanelVisible(true);
           }}
         />
 
@@ -283,7 +294,15 @@ const Editor: React.FC = () => {
             onDrop={onDrop}
             onDragOver={onDragOver}
             nodeTypes={nodeTypes}
+            nodesDraggable={true}
+            nodesConnectable={true}
+            elementsSelectable={true}
+            panOnDrag={true}
+            zoomOnScroll={true}
+            zoomOnPinch={true}
+            preventScrolling={false}
             fitView
+            fitViewOptions={{ padding: 0.2 }}
           >
             <Controls />
             <MiniMap />
@@ -305,22 +324,14 @@ const Editor: React.FC = () => {
         {/* Панель валидации */}
         {isValidationPanelVisible && (
           <ValidationPanel
-            errors={validationResult.errors}
-            warnings={validationResult.warnings}
+            nodes={nodes}
+            edges={edges}
             onClose={() => setIsValidationPanelVisible(false)}
+            onSchemaUpdate={handleSchemaUpdate}
           />
         )}
 
-        {/* Панель справки */}
-        {isHelpPanelVisible && (
-          <div className={styles.helpPanel}>
-            <HelpSystem
-              selectedNodeType={selectedNode?.type}
-              onClose={() => setIsHelpPanelVisible(false)}
-              isVisible={isHelpPanelVisible}
-            />
-          </div>
-        )}
+
       </div>
     </div>
   );

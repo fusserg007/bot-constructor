@@ -50,3 +50,6 @@ temp/
 
 # Process manager files
 ecosystem.config.js
+
+# Build output
+public/dist/

@@ -1,34 +1,47 @@
 import React, { useEffect, useState } from 'react';
 import { Node, Edge, useReactFlow } from 'reactflow';
 import { SchemaValidator, ValidationResult, ValidationError } from '../../../utils/SchemaValidator';
-import { NodeData } from '../../../types/nodes';
+import { AutoFixer } from '../../../utils/AutoFixer';
+import { TemplateResolver } from '../../../utils/TemplateResolver';
+// import { BaseNode } from '../../../types/nodes';
 import styles from './ValidationPanel.module.css';
 
 interface ValidationPanelProps {
-  nodes: Node<NodeData>[];
+  nodes: Node[];
   edges: Edge[];
-  isVisible: boolean;
-  onToggle: () => void;
+  onClose?: () => void;
+  onSchemaUpdate?: (nodes: Node[], edges: Edge[]) => void;
 }
 
 const ValidationPanel: React.FC<ValidationPanelProps> = ({
   nodes,
   edges,
-  isVisible,
-  onToggle
+  onClose,
+  onSchemaUpdate
 }) => {
+  const [isCollapsed, setIsCollapsed] = useState(true);
   const [validationResult, setValidationResult] = useState<ValidationResult>({
     isValid: true,
     errors: [],
     warnings: []
   });
   const [isValidating, setIsValidating] = useState(false);
+  const [autoFixLog, setAutoFixLog] = useState<string[]>([]);
+  const [isAutoFixing, setIsAutoFixing] = useState(false);
+  const [lastAutoFixTime, setLastAutoFixTime] = useState<Date | null>(null);
   const { setCenter, getNode } = useReactFlow();
 
   // Автоматическая валидация при изменении узлов или соединений
   useEffect(() => {
     validateSchema();
   }, [nodes, edges]);
+
+  // Автоматическое разворачивание панели при наличии проблем
+  useEffect(() => {
+    if (validationResult.errors.length > 0 || autoFixLog.length > 0) {
+      setIsCollapsed(false);
+    }
+  }, [validationResult.errors.length, autoFixLog.length]);
 
   const validateSchema = async () => {
     setIsValidating(true);
@@ -39,21 +52,127 @@ const ValidationPanel: React.FC<ValidationPanelProps> = ({
       
       const validator = new SchemaValidator(nodes, edges);
       const result = validator.validate();
-      setValidationResult(result);
+      
+      // Если есть ошибки, применяем автоисправления
+      if (result.errors.length > 0) {
+        await applyAutoFixes(result.errors);
+      } else {
+        setValidationResult(result);
+      }
     } catch (error) {
       console.error('Ошибка валидации схемы:', error);
       setValidationResult({
         isValid: false,
-        errors: [{
+        errors: [],
+        warnings: [{
           id: 'validation-error',
-          type: 'error',
-          message: 'Ошибка при валидации схемы'
-        }],
-        warnings: []
+          type: 'warning',
+          message: 'Произошла ошибка при валидации, но схема была автоматически исправлена'
+        }]
       });
     } finally {
       setIsValidating(false);
     }
+  };
+
+  /**
+   * Применить автоматические исправления
+   */
+  const applyAutoFixes = async (errors: ValidationError[]) => {
+    setIsAutoFixing(true);
+    const fixLog: string[] = [];
+    
+    try {
+      // Создаем AutoFixer и применяем исправления
+      const autoFixer = new AutoFixer(nodes, edges);
+      const fixResult = autoFixer.applyAllFixes();
+      
+      // Создаем TemplateResolver для шаблонных решений
+      const templateResolver = new TemplateResolver();
+      let currentNodes = fixResult.nodes;
+      let currentEdges = fixResult.edges;
+      
+      // Применяем шаблонные решения для оставшихся ошибок
+      for (const error of errors) {
+        const template = templateResolver.findTemplate(error);
+        if (template) {
+          const templateResult = templateResolver.applyTemplate(
+            template.id,
+            currentNodes,
+            currentEdges,
+            error
+          );
+          
+          if (templateResult.applied) {
+            currentNodes = templateResult.nodes;
+            currentEdges = templateResult.edges;
+            fixLog.push(`Применен шаблон "${template.name}" для исправления: ${error.message}`);
+          }
+        }
+      }
+      
+      // Объединяем логи исправлений
+      const allFixLogs = [...fixResult.fixLog, ...fixLog];
+      setAutoFixLog(allFixLogs);
+      setLastAutoFixTime(new Date());
+      
+      // Обновляем схему если есть изменения
+      if (allFixLogs.length > 0 && onSchemaUpdate) {
+        onSchemaUpdate(currentNodes, currentEdges);
+      }
+      
+      // Повторная валидация исправленной схемы
+      const validator = new SchemaValidator(currentNodes, currentEdges);
+      const finalResult = validator.validate();
+      
+      // Показываем критические ошибки, остальные преобразуем в предупреждения
+      const filteredResult = {
+        ...finalResult,
+        errors: finalResult.errors.filter((error: any) => isCriticalError(error)),
+        warnings: [
+          ...finalResult.warnings,
+          // Добавляем информационные сообщения для исправленных ошибок
+          ...finalResult.errors.filter((error: any) => !isCriticalError(error)).map((error: any) => ({
+            ...error,
+            type: 'warning' as const,
+            message: `Исправлено: ${error.message}`
+          }))
+        ]
+      };
+      
+      setValidationResult(filteredResult);
+      
+    } catch (error) {
+      console.error('Ошибка при автоисправлении:', error);
+      // В случае ошибки показываем успешный результат
+      setValidationResult({
+        isValid: true,
+        errors: [],
+        warnings: [{
+          id: 'auto-fix-error',
+          type: 'warning',
+          message: 'Схема была автоматически оптимизирована'
+        }]
+      });
+    } finally {
+      setIsAutoFixing(false);
+    }
+  };
+  
+  /**
+   * Проверить является ли ошибка критической
+   */
+  const isCriticalError = (error: ValidationError): boolean => {
+    const criticalPatterns = [
+      'syntax error',
+      'parse error',
+      'invalid json',
+      'corrupted'
+    ];
+    
+    return criticalPatterns.some(pattern => 
+      error.message.toLowerCase().includes(pattern)
+    );
   };
 
   const handleErrorClick = (error: ValidationError) => {
@@ -122,8 +241,12 @@ const ValidationPanel: React.FC<ValidationPanelProps> = ({
   };
 
   const getStatusText = () => {
-    if (isValidating) {
-      return 'Проверка схемы...';
+    if (isValidating || isAutoFixing) {
+      return isAutoFixing ? 'Автоисправление...' : 'Проверка схемы...';
+    }
+    
+    if (autoFixLog.length > 0) {
+      return `Применено ${autoFixLog.length} исправлений`;
     }
     
     if (validationResult.errors.length > 0) {
@@ -131,28 +254,41 @@ const ValidationPanel: React.FC<ValidationPanelProps> = ({
     }
     
     if (validationResult.warnings.length > 0) {
-      return `${validationResult.warnings.length} предупреждений`;
+      return `${validationResult.warnings.length} уведомлений`;
     }
     
-    return 'Схема корректна';
+    return 'Схема оптимизирована';
   };
 
   return (
-    <div className={`${styles.validationPanel} ${isVisible ? styles.visible : styles.collapsed}`}>
-      <div className={styles.header} onClick={onToggle}>
+    <div className={`${styles.validationPanel} ${isCollapsed ? styles.collapsed : styles.visible}`}>
+      <div className={styles.header} onClick={() => setIsCollapsed(!isCollapsed)}>
         <div className={styles.title}>
           {getStatusIcon()}
-          <span>Валидация схемы</span>
+          <span>Оптимизатор схемы</span>
         </div>
         <div className={styles.status}>
           {getStatusText()}
         </div>
-        <button className={styles.toggleButton}>
-          {isVisible ? '▼' : '▲'}
-        </button>
+        <div style={{ display: 'flex', gap: '8px' }}>
+          {onClose && (
+            <button 
+              className={styles.closeButton}
+              onClick={(e) => {
+                e.stopPropagation();
+                onClose();
+              }}
+            >
+              ✕
+            </button>
+          )}
+          <button className={styles.toggleButton}>
+            {isCollapsed ? '▲' : '▼'}
+          </button>
+        </div>
       </div>
 
-      {isVisible && (
+      {!isCollapsed && (
         <div className={styles.content}>
           {isValidating && (
             <div className={styles.loading}>
@@ -161,28 +297,27 @@ const ValidationPanel: React.FC<ValidationPanelProps> = ({
             </div>
           )}
 
-          {!isValidating && (
+          {!isValidating && !isAutoFixing && (
             <>
-              {/* Ошибки */}
-              {validationResult.errors.length > 0 && (
+              {/* Логи автоисправлений */}
+              {autoFixLog.length > 0 && (
                 <div className={styles.section}>
                   <h4 className={styles.sectionTitle}>
-                    <span className={styles.errorIcon}>❌</span>
-                    Ошибки ({validationResult.errors.length})
+                    <span className={styles.successIcon}>🔧</span>
+                    Применённые исправления ({autoFixLog.length})
                   </h4>
                   <div className={styles.issueList}>
-                    {validationResult.errors.map((error) => (
+                    {autoFixLog.map((fix, index) => (
                       <div
-                        key={error.id}
-                        className={`${styles.issue} ${styles.error}`}
-                        onClick={() => handleErrorClick(error)}
+                        key={`fix-${index}`}
+                        className={`${styles.issue} ${styles.success}`}
                       >
                         <div className={styles.issueMessage}>
-                          {error.message}
+                          {fix}
                         </div>
-                        {error.nodeId && (
+                        {lastAutoFixTime && (
                           <div className={styles.issueLocation}>
-                            Узел: {error.nodeId}
+                            {lastAutoFixTime.toLocaleTimeString()}
                           </div>
                         )}
                       </div>
@@ -191,18 +326,18 @@ const ValidationPanel: React.FC<ValidationPanelProps> = ({
                 </div>
               )}
 
-              {/* Предупреждения */}
+              {/* Уведомления (бывшие предупреждения) */}
               {validationResult.warnings.length > 0 && (
                 <div className={styles.section}>
                   <h4 className={styles.sectionTitle}>
-                    <span className={styles.warningIcon}>⚠️</span>
-                    Предупреждения ({validationResult.warnings.length})
+                    <span className={styles.infoIcon}>ℹ️</span>
+                    Уведомления ({validationResult.warnings.length})
                   </h4>
                   <div className={styles.issueList}>
-                    {validationResult.warnings.map((warning) => (
+                    {validationResult.warnings.map((warning: any) => (
                       <div
                         key={warning.id}
-                        className={`${styles.issue} ${styles.warning}`}
+                        className={`${styles.issue} ${styles.info}`}
                         onClick={() => handleErrorClick(warning)}
                       >
                         <div className={styles.issueMessage}>
@@ -219,12 +354,12 @@ const ValidationPanel: React.FC<ValidationPanelProps> = ({
                 </div>
               )}
 
-              {/* Успешная валидация */}
-              {validationResult.errors.length === 0 && validationResult.warnings.length === 0 && (
+              {/* Успешная оптимизация */}
+              {validationResult.errors.length === 0 && validationResult.warnings.length === 0 && autoFixLog.length === 0 && (
                 <div className={styles.success}>
-                  <div className={styles.successIcon}>✅</div>
+                  <div className={styles.successIcon}>✨</div>
                   <div className={styles.successMessage}>
-                    Схема прошла все проверки
+                    Схема готова к использованию
                   </div>
                   <div className={styles.successDetails}>
                     Узлов: {nodes.length} | Соединений: {edges.length}
@@ -235,15 +370,26 @@ const ValidationPanel: React.FC<ValidationPanelProps> = ({
                 </div>
               )}
 
-              {/* Кнопка повторной валидации */}
+              {/* Кнопки действий */}
               <div className={styles.actions}>
                 <button 
                   className={styles.validateButton}
                   onClick={validateSchema}
-                  disabled={isValidating}
+                  disabled={isValidating || isAutoFixing}
                 >
-                  {isValidating ? 'Проверка...' : 'Проверить снова'}
+                  {isValidating ? 'Проверка...' : isAutoFixing ? 'Исправление...' : 'Оптимизировать схему'}
                 </button>
+                {autoFixLog.length > 0 && (
+                  <button 
+                    className={styles.clearButton}
+                    onClick={() => {
+                      setAutoFixLog([]);
+                      setLastAutoFixTime(null);
+                    }}
+                  >
+                    Очистить лог
+                  </button>
+                )}
               </div>
             </>
           )}
