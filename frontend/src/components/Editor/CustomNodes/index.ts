@@ -1,3 +1,6 @@
+import StartNode from './StartNode';
+import WebhookNode from './WebhookNode';
+import SwitchNode from './SwitchNode';
 import TriggerNode from './TriggerNode';
 import ActionNode from './ActionNode';
 import ConditionNode from './ConditionNode';
@@ -7,9 +10,34 @@ import ScenarioNode from './ScenarioNode';
 import CommandTriggerNode from './CommandTriggerNode';
 import MediaActionNode from './MediaActionNode';
 import TextConditionNode from './TextConditionNode';
+import InteractiveMenuNode from './InteractiveMenuNode';
+import EntryPointNode from './EntryPointNode';
+import { MultiNode } from '../MultiNode';
 
 export const nodeTypes = {
-  // Триггеры
+  // Стартовый узел и точка входа
+  'start': StartNode,
+  'entry-point': EntryPointNode,
+  
+  // Мульти-узел
+  'multi-node': MultiNode,
+  
+  // Новые улучшенные узлы
+  'interactive-menu': InteractiveMenuNode,
+  
+  // Новые типы узлов из схемы
+  'send_message': ActionNode,
+  'send_message_with_keyboard': ActionNode,
+  'callback_handler': TriggerNode,
+  'command': CommandTriggerNode,
+  
+  // Webhook и маршрутизация (как в n8n)
+  'webhook-telegram': WebhookNode,
+  'webhook-http': WebhookNode,
+  'switch-command': SwitchNode,
+  'switch-condition': SwitchNode,
+  
+  // Триггеры (старые)
   'trigger-message': TriggerNode,
   'trigger-command': CommandTriggerNode,
   'trigger-callback': TriggerNode,
@@ -53,6 +81,9 @@ export const nodeTypes = {
 };
 
 export { 
+  StartNode,
+  WebhookNode,
+  SwitchNode,
   TriggerNode, 
   ActionNode, 
   ConditionNode, 
@@ -61,5 +92,8 @@ export {
   ScenarioNode,
   CommandTriggerNode,
   MediaActionNode,
-  TextConditionNode
+  TextConditionNode,
+  InteractiveMenuNode,
+  EntryPointNode,
+  MultiNode
 };

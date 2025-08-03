@@ -6,6 +6,12 @@
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   transition: all 0.2s;
   position: relative;
+  cursor: grab;
+  user-select: none;
+}
+
+.customNode:active {
+  cursor: grabbing;
 }
 
 .customNode:hover {
@@ -28,6 +34,7 @@
   align-items: center;
   gap: 6px;
   border-radius: 6px 6px 0 0;
+  pointer-events: none;
 }
 
 .nodeIcon {
@@ -40,6 +47,7 @@
 
 .nodeContent {
   padding: 12px;
+  pointer-events: none;
 }
 
 .nodeLabel {
@@ -67,12 +75,29 @@
   transform: scale(1.2);
 }
 
+/* Start Node Styles */
+.startNode {
+  border-left: 4px solid #22c55e;
+}
+
+.startNode .nodeHeader {
+  background: #22c55e;
+}
+
 /* Trigger Node Styles */
+.triggerNode {
+  border-left: 4px solid #3b82f6;
+}
+
 .triggerNode .nodeHeader {
   background: #3b82f6;
 }
 
 /* Action Node Styles */
+.actionNode {
+  border-left: 4px solid #10b981;
+}
+
 .actionNode .nodeHeader {
   background: #10b981;
 }
@@ -80,6 +105,7 @@
 /* Condition Node Styles */
 .conditionNode {
   min-width: 200px;
+  border-left: 4px solid #f59e0b;
 }
 
 .conditionNode .nodeHeader {
@@ -118,29 +144,31 @@
   background: #ef4444 !important;
 }
 
-/* Node type specific colors */
-.triggerNode {
-  border-left: 4px solid #3b82f6;
-}
-
-.actionNode {
-  border-left: 4px solid #10b981;
-}
-
-.conditionNode {
-  border-left: 4px solid #f59e0b;
-}
-
+/* Data Node Styles */
 .dataNode {
   border-left: 4px solid #8b5cf6;
 }
 
+.dataNode .nodeHeader {
+  background: #8b5cf6;
+}
+
+/* Integration Node Styles */
 .integrationNode {
   border-left: 4px solid #f97316;
 }
 
+.integrationNode .nodeHeader {
+  background: #f97316;
+}
+
+/* Scenario Node Styles */
 .scenarioNode {
   border-left: 4px solid #06b6d4;
+}
+
+.scenarioNode .nodeHeader {
+  background: #06b6d4;
 }
 
 /* Специализированные узлы */
@@ -154,6 +182,41 @@
 
 .textConditionNode {
   border-left: 4px solid #d97706;
+}
+
+/* Новые узлы */
+.startNode {
+  border-left: 4px solid #22c55e;
+}
+
+.webhookNode {
+  border-left: 4px solid #3b82f6;
+}
+
+.switchNode {
+  border-left: 4px solid #f59e0b;
+  min-width: 220px;
+}
+
+.switchNode .outputLabels {
+  position: absolute;
+  right: -45px;
+  top: 0;
+  height: 100%;
+  pointer-events: none;
+}
+
+.switchNode .outputLabel {
+  position: absolute;
+  font-size: 10px;
+  font-weight: 500;
+  color: #6b7280;
+  background: #ffffff;
+  padding: 2px 6px;
+  border-radius: 3px;
+  border: 1px solid #e5e7eb;
+  transform: translateY(-50%);
+  white-space: nowrap;
 }
 
 /* Стили для кода и паттернов */
@@ -187,6 +250,93 @@
   white-space: nowrap;
 }
 
+/* Интерактивное меню */
+.interactiveMenuNode {
+  min-width: 200px;
+  border-left: 4px solid #3b82f6;
+}
+
+.interactiveMenuNode .nodeHeader {
+  background: #3b82f6;
+}
+
+.messagePreview {
+  font-size: 12px;
+  color: #6b7280;
+  margin-bottom: 8px;
+  max-height: 40px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.buttonPreview {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.buttonRow {
+  display: flex;
+  gap: 4px;
+}
+
+.previewButton {
+  background: #dbeafe;
+  color: #1d4ed8;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 10px;
+  text-align: center;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.emptyButtons {
+  color: #9ca3af;
+  font-size: 11px;
+  font-style: italic;
+  text-align: center;
+  padding: 8px;
+  border: 1px dashed #d1d5db;
+  border-radius: 4px;
+}
+
+/* Точка входа */
+.entryPointNode {
+  border-left: 4px solid #22c55e;
+}
+
+.entryPointNode .nodeHeader {
+  background: #22c55e;
+}
+
+.triggerInfo {
+  text-align: center;
+}
+
+.triggerLabel {
+  font-weight: 600;
+  color: #16a34a;
+  font-size: 14px;
+  margin-bottom: 4px;
+}
+
+.triggerDescription {
+  font-size: 11px;
+  color: #6b7280;
+}
+
+/* Hidden handles for ReactFlow compatibility */
+.hiddenHandle {
+  opacity: 0 !important;
+  pointer-events: none !important;
+  width: 1px !important;
+  height: 1px !important;
+}
+
 /* Responsive adjustments */
 @media (max-width: 768px) {
   .customNode {
@@ -204,4 +354,53 @@
   .nodeSubtext {
     font-size: 11px;
   }
+}/*
+ EntryPoint Node Styles */
+.entryPointNode {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  border: 3px solid #047857;
+  color: white;
+  min-width: 200px;
+  box-shadow: 0 8px 25px rgba(16, 185, 129, 0.3);
+  position: relative;
+}
+
+.entryPointNode::before {
+  content: '🚀 СТАРТ';
+  position: absolute;
+  top: -12px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #047857;
+  color: white;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 10px;
+  font-weight: bold;
+  letter-spacing: 0.5px;
+}
+
+.entryPointNode:hover {
+  box-shadow: 0 12px 35px rgba(16, 185, 129, 0.4);
+  transform: translateY(-2px);
+  transition: all 0.3s ease;
+}
+
+.entryPointNode .nodeHeader {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.entryPointNode .triggerInfo {
+  text-align: center;
+}
+
+.entryPointNode .triggerLabel {
+  font-size: 16px;
+  font-weight: bold;
+  margin-bottom: 4px;
+}
+
+.entryPointNode .triggerDescription {
+  font-size: 12px;
+  opacity: 0.9;
 }

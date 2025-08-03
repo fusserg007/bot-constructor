@@ -1,0 +1,154 @@
+.spinnerContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+.spinner {
+  border-radius: 50%;
+  position: relative;
+  animation: spin 1s linear infinite;
+}
+
+.spinnerInner {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  border-top-color: currentColor;
+  border-right-color: currentColor;
+}
+
+/* Размеры */
+.small .spinner {
+  width: 16px;
+  height: 16px;
+}
+
+.medium .spinner {
+  width: 24px;
+  height: 24px;
+}
+
+.large .spinner {
+  width: 32px;
+  height: 32px;
+}
+
+/* Цвета */
+.primary {
+  color: #3b82f6;
+}
+
+.secondary {
+  color: #6b7280;
+}
+
+.white {
+  color: #ffffff;
+}
+
+/* Текст загрузки */
+.spinnerText {
+  font-size: 14px;
+  color: #6b7280;
+  font-weight: 500;
+  text-align: center;
+}
+
+/* Оверлей */
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(2px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9998;
+}
+
+.overlay .spinnerContainer {
+  background: white;
+  padding: 24px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  min-width: 120px;
+}
+
+/* Inline спиннер */
+.inlineSpinner {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.inlineSpinner.small .spinner {
+  width: 14px;
+  height: 14px;
+}
+
+.inlineSpinner.medium .spinner {
+  width: 18px;
+  height: 18px;
+}
+
+/* Анимация */
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* Пульсирующий эффект для более плавной анимации */
+.spinner::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  border-radius: 50%;
+  border: 2px solid currentColor;
+  opacity: 0.3;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 0.3;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.1;
+    transform: scale(1.1);
+  }
+}
+
+/* Темная тема */
+@media (prefers-color-scheme: dark) {
+  .overlay {
+    background: rgba(0, 0, 0, 0.8);
+  }
+  
+  .overlay .spinnerContainer {
+    background: #1f2937;
+    color: white;
+  }
+  
+  .spinnerText {
+    color: #d1d5db;
+  }
+  
+  .secondary {
+    color: #9ca3af;
+  }
+}

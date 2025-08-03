@@ -1,6 +1,7 @@
 import { Routes, Route } from 'react-router-dom';
 import { ReactFlowProvider } from 'reactflow';
 import { AppProvider } from './context/AppContext';
+import { NotificationProvider } from './components/Notifications/NotificationSystem';
 import { lazy, Suspense } from 'react';
 import './App.css';
 
@@ -34,21 +35,23 @@ const LoadingSpinner = () => (
 function App() {
   return (
     <AppProvider>
-      <div className="app">
-        <Suspense fallback={<LoadingSpinner />}>
-          <Routes>
-            <Route path="/" element={<Dashboard />} />
-            <Route 
-              path="/editor/:botId?" 
-              element={
-                <ReactFlowProvider>
-                  <Editor />
-                </ReactFlowProvider>
-              } 
-            />
-          </Routes>
-        </Suspense>
-      </div>
+      <NotificationProvider>
+        <div className="app">
+          <Suspense fallback={<LoadingSpinner />}>
+            <Routes>
+              <Route path="/" element={<Dashboard />} />
+              <Route 
+                path="/editor/:botId?" 
+                element={
+                  <ReactFlowProvider>
+                    <Editor />
+                  </ReactFlowProvider>
+                } 
+              />
+            </Routes>
+          </Suspense>
+        </div>
+      </NotificationProvider>
     </AppProvider>
   );
 }

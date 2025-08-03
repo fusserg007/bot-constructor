@@ -420,10 +420,8 @@ async function getTemplateNodes(templateId) {
     const templateData = await fs.readFile(templatePath, 'utf8');
     const template = JSON.parse(templateData);
     
-    // Конвертируем шаблон в визуальные узлы
-    const VisualSchemaConverter = require('../utils/VisualSchemaConverter');
-    const converter = new VisualSchemaConverter();
-    return converter.convertToVisual(template);
+    // Шаблон уже в новом формате, конвертация не нужна
+    return template;
   } catch (error) {
     console.error(`Ошибка загрузки шаблона ${templateId}:`, error);
     return { nodes: [], connections: [] };
@@ -661,10 +659,8 @@ router.post('/:id/convert-schema', async (req, res) => {
     const schemaData = await fs.readFile(schemaPath, 'utf8');
     const schema = JSON.parse(schemaData);
 
-    // Конвертируем схему в исполняемую логику
-    const VisualSchemaConverter = require('../utils/VisualSchemaConverter');
-    const converter = new VisualSchemaConverter();
-    const executableConfig = converter.convertToExecutable(schema);
+    // Схема уже в новом формате, конвертация не нужна
+    const executableConfig = schema;
 
     // Обновляем конфигурацию бота
     bot.configuration = executableConfig;
@@ -705,10 +701,8 @@ router.post('/:id/migrate-to-visual', async (req, res) => {
       });
     }
 
-    // Конвертируем существующую конфигурацию в визуальную схему
-    const VisualSchemaConverter = require('../utils/VisualSchemaConverter');
-    const converter = new VisualSchemaConverter();
-    const visualSchema = converter.convertToVisual(bot.configuration);
+    // Конфигурация уже в новом формате, конвертация не нужна
+    const visualSchema = bot.configuration;
 
     // Создаем визуальную схему
     const schemaId = Date.now().toString() + '_migrated';

@@ -1,22 +1,59 @@
 import React, { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useApp } from '../../context/AppContext';
+// import { useNotifications } from '../Notifications/NotificationSystem';
+import { useLoadOperation } from '../../hooks/useAsyncOperation';
+import LoadingSpinner from '../LoadingSpinner/LoadingSpinner';
+import { getErrorMessage } from '../../utils/errorMessages';
 import styles from './Dashboard.module.css';
 
 const Dashboard: React.FC = () => {
   const { state, fetchBots } = useApp();
-  const { bots, loading, error } = state;
+  const { bots } = state;
+  // const { showError } = useNotifications();
+  const { isLoading, error, load } = useLoadOperation();
 
   useEffect(() => {
-    fetchBots();
-  }, []);
+    const loadBots = async () => {
+      await load(fetchBots, {
+        errorMessage: 'Не удалось загрузить список ботов',
+        onError: (error) => {
+          console.error('Dashboard load error:', error);
+        }
+      });
+    };
 
-  if (loading) {
-    return <div className={styles.loading}>Загрузка...</div>;
+    loadBots();
+  }, []); // Убираем зависимости чтобы избежать бесконечных ре-рендеров
+
+  if (isLoading) {
+    return (
+      <div className={styles.dashboard}>
+        <LoadingSpinner 
+          size="large" 
+          text="Загрузка ботов..." 
+          className={styles.centerSpinner}
+        />
+      </div>
+    );
   }
 
   if (error) {
-    return <div className={styles.error}>Ошибка: {error}</div>;
+    return (
+      <div className={styles.dashboard}>
+        <div className={styles.errorContainer}>
+          <div className={styles.errorIcon}>⚠️</div>
+          <div className={styles.errorTitle}>Ошибка загрузки</div>
+          <div className={styles.errorMessage}>{getErrorMessage(error)}</div>
+          <button 
+            className={styles.retryButton}
+            onClick={() => load(fetchBots)}
+          >
+            Попробовать снова
+          </button>
+        </div>
+      </div>
+    );
   }
 
   const totalBots = bots.length;

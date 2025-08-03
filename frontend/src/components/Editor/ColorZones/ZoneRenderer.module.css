@@ -1,0 +1,205 @@
+.zoneRenderer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1; /* Под узлами, но над фоном */
+}
+
+.zone {
+  position: absolute;
+  border: 2px dashed;
+  border-radius: 8px;
+  pointer-events: all;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 100px;
+  min-height: 80px;
+}
+
+.zone:hover {
+  opacity: 0.9;
+  transform: scale(1.01);
+}
+
+.zone.selected {
+  border-style: solid;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
+}
+
+/* Заголовок зоны */
+.zoneHeader {
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  height: 28px;
+  border-radius: 6px 6px 0 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 8px;
+  color: white;
+  font-size: 12px;
+  font-weight: 500;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.zoneName {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.zoneNodeCount {
+  font-size: 10px;
+  opacity: 0.9;
+  margin-left: 8px;
+}
+
+/* Область содержимого */
+.zoneContent {
+  position: absolute;
+  top: 26px;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 8px;
+  overflow: hidden;
+}
+
+/* Ручки для изменения размера */
+.resizeHandle {
+  position: absolute;
+  background: #3b82f6;
+  border: 2px solid white;
+  border-radius: 50%;
+  width: 12px;
+  height: 12px;
+  cursor: pointer;
+  opacity: 0.8;
+  transition: all 0.2s;
+  z-index: 10;
+}
+
+.resizeHandle:hover {
+  opacity: 1;
+  transform: scale(1.2);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* Позиционирование ручек */
+.resizeHandle.topLeft {
+  top: -6px;
+  left: -6px;
+  cursor: nw-resize;
+}
+
+.resizeHandle.topRight {
+  top: -6px;
+  right: -6px;
+  cursor: ne-resize;
+}
+
+.resizeHandle.bottomLeft {
+  bottom: -6px;
+  left: -6px;
+  cursor: sw-resize;
+}
+
+.resizeHandle.bottomRight {
+  bottom: -6px;
+  right: -6px;
+  cursor: se-resize;
+}
+
+.resizeHandle.top {
+  top: -6px;
+  left: 50%;
+  transform: translateX(-50%);
+  cursor: n-resize;
+}
+
+.resizeHandle.bottom {
+  bottom: -6px;
+  left: 50%;
+  transform: translateX(-50%);
+  cursor: s-resize;
+}
+
+.resizeHandle.left {
+  left: -6px;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: w-resize;
+}
+
+.resizeHandle.right {
+  right: -6px;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: e-resize;
+}
+
+/* Анимации */
+@keyframes zoneAppear {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.zone {
+  animation: zoneAppear 0.3s ease-out;
+}
+
+/* Состояния зон */
+.zone[data-state="creating"] {
+  border-style: dotted;
+  opacity: 0.7;
+}
+
+.zone[data-state="empty"] {
+  opacity: 0.5;
+}
+
+.zone[data-state="empty"] .zoneHeader {
+  opacity: 0.7;
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+  .resizeHandle {
+    width: 16px;
+    height: 16px;
+  }
+  
+  .resizeHandle.topLeft,
+  .resizeHandle.topRight,
+  .resizeHandle.bottomLeft,
+  .resizeHandle.bottomRight {
+    margin: -8px;
+  }
+  
+  .resizeHandle.top,
+  .resizeHandle.bottom {
+    top: -8px;
+  }
+  
+  .resizeHandle.bottom {
+    bottom: -8px;
+    top: auto;
+  }
+  
+  .resizeHandle.left,
+  .resizeHandle.right {
+    margin: -8px 0;
+  }
+}

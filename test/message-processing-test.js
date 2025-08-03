@@ -4,14 +4,14 @@
 
 const BotRuntime = require('../utils/BotRuntime');
 const NodeProcessor = require('../utils/NodeProcessor');
-const VisualSchemaConverter = require('../utils/VisualSchemaConverter');
+// const VisualSchemaConverter = require('../utils/VisualSchemaConverter'); // УДАЛЕН
 const { FileStorage } = require('../utils/FileStorage');
 
 class MessageProcessingTester {
     constructor() {
         this.botRuntime = new BotRuntime();
         this.storage = new FileStorage();
-        this.schemaConverter = new VisualSchemaConverter();
+        // this.schemaConverter = new VisualSchemaConverter(); // УДАЛЕН
         this.testResults = {
             passed: 0,
             failed: 0,

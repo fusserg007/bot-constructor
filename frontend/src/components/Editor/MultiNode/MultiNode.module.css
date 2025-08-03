@@ -1,0 +1,285 @@
+/* Multi-Node Base Styles */
+.multiNode {
+  background: #ffffff;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  min-width: 200px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s;
+  position: relative;
+  cursor: grab;
+  user-select: none;
+}
+
+.multiNode:active {
+  cursor: grabbing;
+}
+
+.multiNode:hover {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.multiNode.selected {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.multiNode.expanded {
+  min-width: 250px;
+  min-height: 200px;
+}
+
+/* Node Header */
+.nodeHeader {
+  padding: 8px 12px;
+  color: white;
+  font-weight: 600;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: 6px 6px 0 0;
+  position: relative;
+}
+
+.nodeIcon {
+  font-size: 14px;
+}
+
+.nodeTitle {
+  flex: 1;
+}
+
+/* Node Expander */
+.nodeExpander {
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  border-radius: 4px;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-left: auto;
+}
+
+.nodeExpander:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: scale(1.1);
+}
+
+.expanderIcon {
+  color: white;
+  font-size: 10px;
+  transition: transform 0.2s;
+  transform-origin: center;
+}
+
+.expanderIcon.expanded {
+  transform: rotate(90deg);
+}
+
+/* Node Content */
+.nodeContent {
+  padding: 12px;
+}
+
+.nodeLabel {
+  font-size: 14px;
+  font-weight: 500;
+  color: #111827;
+  margin-bottom: 4px;
+  line-height: 1.3;
+}
+
+.nodeSubtext {
+  font-size: 12px;
+  color: #6b7280;
+  margin-bottom: 8px;
+}
+
+/* Expanded Content */
+.expandedContent {
+  border-top: 1px solid #e5e7eb;
+  padding: 12px;
+  background: #f9fafb;
+  border-radius: 0 0 6px 6px;
+  min-height: 120px;
+  position: relative;
+}
+
+.childrenContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.childItem {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 4px;
+  padding: 8px;
+  font-size: 12px;
+  color: #374151;
+  transition: all 0.2s;
+}
+
+.childItem:hover {
+  border-color: #3b82f6;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.childItem.button {
+  background: #dbeafe;
+  border-color: #3b82f6;
+  color: #1d4ed8;
+}
+
+.childItem.text {
+  background: #f0fdf4;
+  border-color: #22c55e;
+  color: #15803d;
+}
+
+.childItem.input {
+  background: #fef3c7;
+  border-color: #f59e0b;
+  color: #92400e;
+}
+
+.childItem.condition {
+  background: #fdf2f8;
+  border-color: #ec4899;
+  color: #be185d;
+}
+
+.emptyState {
+  text-align: center;
+  color: #9ca3af;
+  font-size: 11px;
+  font-style: italic;
+  padding: 20px;
+  border: 1px dashed #d1d5db;
+  border-radius: 4px;
+}
+
+/* Button Layout Variants */
+.buttonLayoutTop .expandedContent {
+  padding-top: 40px;
+}
+
+.buttonLayoutBottom .expandedContent {
+  padding-bottom: 40px;
+}
+
+.buttonLayoutSide {
+  display: flex;
+}
+
+.buttonLayoutSide .nodeContent {
+  flex: 1;
+}
+
+.buttonLayoutSide .expandedContent {
+  width: 120px;
+  border-top: none;
+  border-left: 1px solid #e5e7eb;
+  border-radius: 0 6px 6px 0;
+}
+
+/* Handles */
+.handle {
+  width: 12px;
+  height: 12px;
+  border: 2px solid #ffffff;
+  border-radius: 50%;
+  transition: all 0.2s;
+}
+
+.handle:hover {
+  transform: scale(1.2);
+}
+
+/* Hidden handles for ReactFlow compatibility */
+.hiddenHandle {
+  opacity: 0 !important;
+  pointer-events: none !important;
+  width: 1px !important;
+  height: 1px !important;
+}
+
+/* Color Variants */
+.multiNode.primary {
+  border-left: 4px solid #3b82f6;
+}
+
+.multiNode.primary .nodeHeader {
+  background: #3b82f6;
+}
+
+.multiNode.success {
+  border-left: 4px solid #22c55e;
+}
+
+.multiNode.success .nodeHeader {
+  background: #22c55e;
+}
+
+.multiNode.warning {
+  border-left: 4px solid #f59e0b;
+}
+
+.multiNode.warning .nodeHeader {
+  background: #f59e0b;
+}
+
+.multiNode.danger {
+  border-left: 4px solid #ef4444;
+}
+
+.multiNode.danger .nodeHeader {
+  background: #ef4444;
+}
+
+/* Animation for expand/collapse */
+.expandedContent {
+  animation: expandIn 0.2s ease-out;
+}
+
+@keyframes expandIn {
+  from {
+    opacity: 0;
+    max-height: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+  }
+  to {
+    opacity: 1;
+    max-height: 300px;
+    padding-top: 12px;
+    padding-bottom: 12px;
+  }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .multiNode {
+    min-width: 180px;
+  }
+  
+  .multiNode.expanded {
+    min-width: 220px;
+  }
+  
+  .nodeContent {
+    padding: 10px;
+  }
+  
+  .expandedContent {
+    padding: 10px;
+  }
+}

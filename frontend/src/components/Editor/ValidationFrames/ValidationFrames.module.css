@@ -1,0 +1,207 @@
+.validationFrames {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.validationFrame {
+  position: absolute;
+  border-radius: 8px;
+  border-width: 3px;
+  border-style: solid;
+  pointer-events: auto;
+  transition: all 0.2s ease;
+  animation: validationPulse 2s infinite;
+}
+
+.validationFrame.error {
+  border-color: #ef4444;
+  box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.2);
+}
+
+.validationFrame.warning {
+  border-color: #f59e0b;
+  box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.2);
+}
+
+.validationFrame.valid {
+  border-color: #10b981;
+  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
+}
+
+/* Анимация пульсации для привлечения внимания */
+@keyframes validationPulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+/* Тултип с подробной информацией */
+.validationTooltip {
+  position: absolute;
+  top: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  min-width: 200px;
+  max-width: 300px;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.2s ease;
+  z-index: 1000;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.validationFrame:hover .validationTooltip {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(-50%) translateY(-5px);
+}
+
+.tooltipHeader {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.tooltipIcon {
+  font-size: 14px;
+}
+
+.tooltipTitle {
+  font-weight: 600;
+  color: #374151;
+}
+
+.tooltipContent {
+  margin-bottom: 8px;
+}
+
+.tooltipMessage {
+  color: #6b7280;
+  margin-bottom: 4px;
+}
+
+.tooltipMessage:last-child {
+  margin-bottom: 0;
+}
+
+.tooltipDetails {
+  border-top: 1px solid #e5e7eb;
+  padding-top: 8px;
+  font-size: 12px;
+}
+
+.detailSection {
+  margin-bottom: 6px;
+  color: #6b7280;
+}
+
+.detailSection:last-child {
+  margin-bottom: 0;
+}
+
+.detailSection strong {
+  color: #374151;
+  font-weight: 500;
+}
+
+/* Стрелка тултипа */
+.validationTooltip::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 6px solid transparent;
+  border-top-color: white;
+}
+
+.validationTooltip::before {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 7px solid transparent;
+  border-top-color: #e5e7eb;
+  z-index: -1;
+}
+
+/* Адаптивность для мобильных устройств */
+@media (max-width: 768px) {
+  .validationTooltip {
+    position: fixed;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    max-width: 280px;
+    z-index: 9999;
+  }
+  
+  .validationTooltip::after,
+  .validationTooltip::before {
+    display: none;
+  }
+  
+  .validationFrame:hover .validationTooltip {
+    transform: translate(-50%, -50%) !important;
+  }
+}
+
+/* Специальные стили для разных типов ошибок */
+.validationFrame.error.critical {
+  border-width: 4px;
+  animation: criticalError 1s infinite;
+}
+
+@keyframes criticalError {
+  0%, 100% {
+    border-color: #ef4444;
+  }
+  50% {
+    border-color: #dc2626;
+  }
+}
+
+.validationFrame.warning.minor {
+  border-width: 2px;
+  opacity: 0.8;
+}
+
+/* Состояние при фокусе */
+.validationFrame:focus-within {
+  outline: none;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.3);
+}
+
+/* Анимация появления */
+.validationFrame {
+  animation: fadeInFrame 0.3s ease-out;
+}
+
+@keyframes fadeInFrame {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}

@@ -37,6 +37,8 @@ export interface NodeConfig {
 
 export type NodeCategory = 'triggers' | 'conditions' | 'actions' | 'data' | 'integrations' | 'scenarios';
 
+export type UsageFrequency = 'frequent' | 'moderate' | 'rare';
+
 export interface NodeDefinition {
   type: string;
   category: NodeCategory;
@@ -44,6 +46,7 @@ export interface NodeDefinition {
   description: string;
   icon: string;
   color: string;
+  usageFrequency: UsageFrequency;
   defaultConfig: NodeConfig;
   inputs: NodePort[];
   outputs: NodePort[];

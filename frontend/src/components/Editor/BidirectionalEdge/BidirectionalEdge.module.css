@@ -1,0 +1,228 @@
+.bidirectionalEdge {
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.bidirectionalEdge:hover {
+  stroke-width: 3;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+}
+
+.bidirectionalEdge.selected {
+  stroke-width: 3;
+  filter: drop-shadow(0 2px 8px rgba(59, 130, 246, 0.3));
+}
+
+.bidirectional {
+  stroke: #10b981;
+  stroke-dasharray: none;
+}
+
+.unidirectional {
+  stroke: #6b7280;
+}
+
+.bidirectional:hover {
+  stroke: #059669;
+}
+
+.unidirectional:hover {
+  stroke: #374151;
+}
+
+/* Стили для стрелок */
+.arrowHead {
+  transition: fill 0.2s ease;
+}
+
+.bidirectionalEdge:hover .arrowHead {
+  fill: #059669;
+}
+
+.bidirectionalEdge.selected .arrowHead {
+  fill: #3b82f6;
+}
+
+/* Подписи на стрелках */
+.edgeLabel {
+  font-size: 12px;
+  pointer-events: auto;
+  z-index: 10;
+}
+
+.labelContent {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 4px;
+  padding: 2px 6px;
+  font-size: 11px;
+  font-weight: 500;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  white-space: nowrap;
+  max-width: 100px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: all 0.2s ease;
+}
+
+.labelContent:hover {
+  background: #f9fafb;
+  border-color: #d1d5db;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  max-width: none;
+  z-index: 20;
+}
+
+.centerLabel {
+  color: #374151;
+  border-color: #d1d5db;
+}
+
+.sourceLabel {
+  color: #059669;
+  border-color: #10b981;
+  background: #f0fdf4;
+}
+
+.targetLabel {
+  color: #dc2626;
+  border-color: #ef4444;
+  background: #fef2f2;
+}
+
+/* Индикатор двунаправленности */
+.bidirectionalIndicator {
+  font-size: 14px;
+  color: #10b981;
+  font-weight: bold;
+  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
+  pointer-events: none;
+  z-index: 5;
+}
+
+/* Анимация для анимированных стрелок */
+@keyframes dash {
+  to {
+    stroke-dashoffset: -10;
+  }
+}
+
+.bidirectionalEdge[data-animated="true"] {
+  stroke-dasharray: 5, 5;
+  animation: dash 1s linear infinite;
+}
+
+/* Состояния стрелок */
+.bidirectionalEdge.error {
+  stroke: #ef4444;
+  stroke-dasharray: 3, 3;
+}
+
+.bidirectionalEdge.warning {
+  stroke: #f59e0b;
+  stroke-dasharray: 2, 2;
+}
+
+.bidirectionalEdge.success {
+  stroke: #10b981;
+}
+
+/* Эффекты при наведении */
+.bidirectionalEdge.bidirectional:hover {
+  stroke: #059669;
+  stroke-width: 3;
+}
+
+.bidirectionalEdge.unidirectional:hover {
+  stroke: #374151;
+  stroke-width: 3;
+}
+
+/* Выделение при выборе */
+.bidirectionalEdge.selected {
+  stroke: #3b82f6;
+  stroke-width: 3;
+  filter: drop-shadow(0 0 6px rgba(59, 130, 246, 0.4));
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+  .labelContent {
+    font-size: 10px;
+    padding: 1px 4px;
+    max-width: 80px;
+  }
+  
+  .bidirectionalIndicator {
+    font-size: 12px;
+  }
+  
+  .edgeLabel {
+    font-size: 10px;
+  }
+}
+
+/* Темная тема */
+@media (prefers-color-scheme: dark) {
+  .labelContent {
+    background: #1f2937;
+    border-color: #374151;
+    color: #f9fafb;
+  }
+  
+  .labelContent:hover {
+    background: #111827;
+    border-color: #4b5563;
+  }
+  
+  .sourceLabel {
+    background: #064e3b;
+    border-color: #059669;
+    color: #6ee7b7;
+  }
+  
+  .targetLabel {
+    background: #7f1d1d;
+    border-color: #dc2626;
+    color: #fca5a5;
+  }
+  
+  .bidirectionalIndicator {
+    color: #6ee7b7;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+  }
+}
+
+/* Анимация появления */
+.bidirectionalEdge {
+  animation: edgeAppear 0.3s ease-out;
+}
+
+@keyframes edgeAppear {
+  from {
+    opacity: 0;
+    stroke-dasharray: 100;
+    stroke-dashoffset: 100;
+  }
+  to {
+    opacity: 1;
+    stroke-dasharray: none;
+    stroke-dashoffset: 0;
+  }
+}
+
+/* Специальные эффекты для активных стрелок */
+.bidirectionalEdge.active {
+  stroke-width: 4;
+  filter: drop-shadow(0 0 8px currentColor);
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}

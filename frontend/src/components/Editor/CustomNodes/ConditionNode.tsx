@@ -10,7 +10,7 @@ interface ConditionNodeData {
   color?: string;
 }
 
-const ConditionNode: React.FC<NodeProps<ConditionNodeData>> = ({ data, selected }) => {
+const ConditionNode: React.FC<NodeProps<ConditionNodeData>> = React.memo(({ data, selected }) => {
   return (
     <div className={`${styles.customNode} ${styles.conditionNode} ${selected ? styles.selected : ''}`}>
       <Handle
@@ -55,6 +55,16 @@ const ConditionNode: React.FC<NodeProps<ConditionNodeData>> = ({ data, selected 
       </div>
     </div>
   );
-};
+}, (prevProps, nextProps) => {
+  return (
+    prevProps.selected === nextProps.selected &&
+    prevProps.data.label === nextProps.data.label &&
+    prevProps.data.conditionType === nextProps.data.conditionType &&
+    prevProps.data.icon === nextProps.data.icon &&
+    prevProps.data.color === nextProps.data.color
+  );
+});
+
+ConditionNode.displayName = 'ConditionNode';
 
 export default ConditionNode;

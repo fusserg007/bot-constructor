@@ -10,7 +10,7 @@ interface ActionNodeData {
   color?: string;
 }
 
-const ActionNode: React.FC<NodeProps<ActionNodeData>> = ({ data, selected }) => {
+const ActionNode: React.FC<NodeProps<ActionNodeData>> = React.memo(({ data, selected }) => {
   return (
     <div className={`${styles.customNode} ${styles.actionNode} ${selected ? styles.selected : ''}`}>
       <Handle
@@ -40,6 +40,16 @@ const ActionNode: React.FC<NodeProps<ActionNodeData>> = ({ data, selected }) => 
       />
     </div>
   );
-};
+}, (prevProps, nextProps) => {
+  return (
+    prevProps.selected === nextProps.selected &&
+    prevProps.data.label === nextProps.data.label &&
+    prevProps.data.actionType === nextProps.data.actionType &&
+    prevProps.data.icon === nextProps.data.icon &&
+    prevProps.data.color === nextProps.data.color
+  );
+});
+
+ActionNode.displayName = 'ActionNode';
 
 export default ActionNode;

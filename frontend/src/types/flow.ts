@@ -24,12 +24,21 @@ export interface FlowState {
   edges: FlowEdge[];
 }
 
+export interface BotConnection {
+  id: string;
+  sourceNodeId: string;
+  targetNodeId: string;
+  sourceOutput: string;
+  targetInput: string;
+}
+
 export interface BotSchema {
   id: string;
   name: string;
   description: string;
   nodes: FlowNode[];
-  edges: FlowEdge[];
+  connections: BotConnection[]; // Новый формат
+  edges?: FlowEdge[]; // Старый формат для совместимости
   variables: Record<string, any>;
   settings: Record<string, any>;
 }

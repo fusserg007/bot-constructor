@@ -57,12 +57,14 @@ app.use(express.static(path.join(__dirname, 'public', 'dist'), {
     if (path.endsWith('.css')) {
       res.setHeader('Content-Type', 'text/css');
     }
+    // Отключаем кеширование для разработки
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
   }
 }));
-// Статическая раздача старых файлов (основная)
-app.use(express.static(path.join(__dirname, 'public')));
-// Статическая раздача старых файлов (для совместимости API)
-app.use('/legacy', express.static(path.join(__dirname, 'public')));
+// Статическая раздача только для совместимости с некоторыми файлами
+// (dashboard.html, deployment.html, logs.html остаются доступными)
 app.use('/data', express.static(path.join(__dirname, 'data')));
 
 // Создание структуры папок для данных
@@ -146,6 +148,7 @@ app.use('/api/templates', templatesRoutes);
 app.use('/api/visual-schemas', visualSchemasRoutes);
 app.use('/api/stats', statsRoutes);
 app.use('/api/performance', require('./routes/performance'));
+app.use('/api/canvas-log', require('./routes/canvas-log'));
 // app.use('/api/help', require('./routes/help')); // Отключено
 app.use('/api/logs', require('./routes/logs'));
 app.use('/api/debug', require('./routes/debug'));
@@ -221,46 +224,39 @@ app.get('/debug.html', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'dist', 'debug.html'));
 });
 
-app.get('/legacy/*', (req, res, next) => {
-  // Уже обработано выше через express.static
-  next();
+// API для логирования отладочной информации
+app.post('/api/debug-log', (req, res) => {
+  const debugInfo = req.body;
+  const logEntry = `=== DEBUG LOG ${debugInfo.timestamp} ===
+Bot Name: ${debugInfo.botName}
+Bot ID (URL): ${debugInfo.botIdFromUrl}
+Bot ID (Data): ${debugInfo.botIdFromData}
+Config Nodes: ${debugInfo.configNodes}
+Config Connections: ${debugInfo.configConnections}
+Config Edges: ${debugInfo.configEdges}
+Legacy Format: ${debugInfo.isLegacy}
+Use New Format: ${debugInfo.useNewFormat}
+=====================================
+
+`;
+  
+  // Перезаписываем файл debug.log (не добавляем)
+  require('fs').writeFileSync(path.join(__dirname, 'debug.log'), logEntry);
+  
+  res.json({ success: true });
 });
 
-// Исключения для тестовых страниц и статических файлов
-app.get('/minimal-test.html', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'minimal-test.html'));
+// Специальные маршруты для системных страниц (dashboard, deployment, logs)
+app.get('/dashboard.html', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'dashboard.html'));
 });
 
-app.get('/basic-test.html', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'basic-test.html'));
+app.get('/deployment.html', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'deployment.html'));
 });
 
-app.get('/js-test.html', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'js-test.html'));
-});
-
-app.get('/simple-test.html', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'simple-test.html'));
-});
-
-app.get('/js-debug.html', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'js-debug.html'));
-});
-
-app.get('/interface-test.html', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'interface-test.html'));
-});
-
-app.get('/index-fixed.html', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index-fixed.html'));
-});
-
-app.get('/old-interface.html', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
-
-app.get('/react-debug.html', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'react-debug.html'));
+app.get('/logs.html', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'logs.html'));
 });
 
 // Главный маршрут - React приложение
@@ -297,9 +293,8 @@ const startServer = async () => {
 
 // React Router - catch-all для SPA
 app.get('*', (req, res) => {
-  // Исключаем API роуты
+  // Исключаем API роуты и системные файлы
   if (req.path.startsWith('/api/') ||
-    req.path.startsWith('/legacy/') ||
     req.path.startsWith('/data/') ||
     req.path.includes('.')) {
     return res.status(404).json({ error: 'Not found' });

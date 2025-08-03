@@ -114,6 +114,13 @@ export function convertLegacyToReactFlow(legacyConfig: LegacyConfiguration): { n
  */
 function convertNodeType(legacyType: string): string {
   const typeMapping: Record<string, string> = {
+    // Новые типы узлов из схемы
+    'start': 'start',
+    'send_message': 'send_message',
+    'send_message_with_keyboard': 'send_message_with_keyboard',
+    'callback_handler': 'callback_handler',
+    'command': 'command',
+    
     // Основные типы
     'action': 'action-send-message',
     'trigger': 'trigger-message',
@@ -123,13 +130,11 @@ function convertNodeType(legacyType: string): string {
     'scenario': 'scenario-welcome',
     
     // Триггеры
-    'command': 'trigger-command',
     'message': 'trigger-message',
     'callback': 'trigger-callback',
     'inline_query': 'trigger-inline',
     
     // Действия
-    'send_message': 'action-send-message',
     'send_photo': 'action-send-photo',
     'send_video': 'action-send-video',
     'send_audio': 'action-send-audio',
@@ -157,7 +162,7 @@ function convertNodeType(legacyType: string): string {
     'api_call': 'integration-api'
   };
 
-  return typeMapping[legacyType] || 'action-send-message';
+  return typeMapping[legacyType] || legacyType;
 }
 
 /**
@@ -166,6 +171,24 @@ function convertNodeType(legacyType: string): string {
 function convertNodeData(legacyNode: LegacyNode): BaseNode {
   const data = legacyNode.data || {};
   const nodeConfig = legacyNode.config || data.config || {};
+  
+  // Исправляем проблему с дублированием данных в bot_01_main_test_bot
+  const cleanConfig = { ...nodeConfig };
+  
+  // Убираем избыточные поля из конфигурации
+  delete cleanConfig.id;
+  delete cleanConfig.type;
+  delete cleanConfig.category;
+  delete cleanConfig.position;
+  delete cleanConfig.size;
+  delete cleanConfig.color;
+  delete cleanConfig.icon;
+  delete cleanConfig.inputs;
+  delete cleanConfig.outputs;
+  delete cleanConfig.name;
+  delete cleanConfig.description;
+  delete cleanConfig.tags;
+  delete cleanConfig.compatibility;
   
   // Определяем категорию на основе типа узла
   let category: BaseNode['category'] = 'actions';
@@ -194,7 +217,7 @@ function convertNodeData(legacyNode: LegacyNode): BaseNode {
   // Создаем конфигурацию узла, объединяя данные из разных источников
   const config: Record<string, any> = {
     ...data,
-    ...nodeConfig
+    ...cleanConfig
   };
   
   // Удаляем служебные поля
@@ -270,14 +293,28 @@ export function isLegacyFormat(config: any): boolean {
     return false;
   }
 
-  // Проверяем, есть ли у узлов поле connections (старый формат)
-  // или есть поле connections в корне (промежуточный формат)
-  // или отсутствует поле edges (новый формат React Flow)
-  const hasNodeConnections = config.nodes.some((node: any) => node.connections);
+  // Новый формат: узлы с config и connections в корне
+  const hasConfigNodes = config.nodes.some((node: any) => node.config);
   const hasRootConnections = Array.isArray(config.connections);
+  
+  // Если есть config в узлах И connections в корне - это НОВЫЙ формат
+  if (hasConfigNodes && hasRootConnections) {
+    return false; // НЕ legacy
+  }
+
+  // Старый формат: узлы с data и edges в корне
+  const hasDataNodes = config.nodes.some((node: any) => node.data);
   const hasEdges = Array.isArray(config.edges);
   
-  return hasNodeConnections || hasRootConnections || !hasEdges;
+  // Если есть data в узлах И edges в корне - это старый формат
+  if (hasDataNodes && hasEdges) {
+    return true; // legacy
+  }
+
+  // Очень старый формат: connections в узлах
+  const hasNodeConnections = config.nodes.some((node: any) => node.connections);
+  
+  return hasNodeConnections; // legacy если есть connections в узлах
 }
 
 /**

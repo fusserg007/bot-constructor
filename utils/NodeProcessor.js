@@ -1,5 +1,6 @@
 const fs = require('fs').promises;
 const path = require('path');
+const ExecutionEngine = require('./ExecutionEngine');
 
 /**
  * Процессор узлов для выполнения логики ботов
@@ -11,6 +12,7 @@ class NodeProcessor {
     this.config = botInstance.config;
     this.userSessions = new Map();
     this.dataDir = path.join(__dirname, '..', 'data', 'bot_data', botInstance.id);
+    this.executionEngine = new ExecutionEngine(botInstance);
   }
 
   async init() {
@@ -22,11 +24,22 @@ class NodeProcessor {
   }
 
   async processTriggers(message) {
-    const triggers = this.config.configuration.nodes.filter(node => node.type === 'trigger');
+    // Новая архитектура: ищем стартовый узел или подходящие триггеры
+    const nodes = this.config.configuration.nodes;
+    
+    // Сначала проверяем есть ли стартовый узел
+    const startNode = nodes.find(node => node.type === 'start');
+    if (startNode) {
+      await this.executionEngine.executeWorkflow(message, startNode.id);
+      return;
+    }
+
+    // Если нет стартового узла, работаем по старой схеме с триггерами
+    const triggers = nodes.filter(node => node.type.startsWith('trigger'));
 
     for (const trigger of triggers) {
       if (await this.checkTrigger(trigger, message)) {
-        await this.executeNodeFlow(trigger, message);
+        await this.executionEngine.executeWorkflow(message, trigger.id);
       }
     }
   }

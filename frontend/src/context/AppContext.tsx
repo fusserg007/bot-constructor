@@ -17,7 +17,8 @@ interface Bot {
   };
   configuration?: {
     nodes: any[];
-    edges: any[];
+    connections?: any[]; // Новый формат
+    edges?: any[]; // Старый формат для совместимости
     variables: Record<string, any>;
     settings: Record<string, any>;
   };

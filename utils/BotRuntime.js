@@ -1,7 +1,7 @@
 const fs = require('fs').promises;
 const path = require('path');
 const NodeProcessor = require('./NodeProcessor');
-const VisualSchemaConverter = require('./VisualSchemaConverter');
+// Конвертер схем удален - используется только новый формат
 const Logger = require('./Logger');
 const MessengerAdapterFactory = require('./MessengerAdapterFactory');
 
@@ -17,7 +17,7 @@ class BotRuntime {
     this.usePolling = process.env.USE_POLLING !== 'false';
     this.botsDir = path.join(__dirname, '..', 'data', 'bots');
     this.schemasDir = path.join(__dirname, '..', 'data', 'visual_schemas');
-    this.schemaConverter = new VisualSchemaConverter();
+    // Конвертер схем удален - используется только новый формат
     this.logger = new Logger();
     this.healthCheckInterval = null;
     this.healthCheckIntervalMs = 30 * 60 * 1000; // 30 минут
@@ -643,8 +643,8 @@ class BotRuntime {
       
       console.log(`📊 Загружена визуальная схема с ${schema.nodes?.length || 0} узлами и ${schema.connections?.length || 0} соединениями`);
       
-      // Конвертируем визуальную схему в исполняемую конфигурацию
-      const executableConfig = this.schemaConverter.convertToExecutable(schema);
+      // Схема уже в новом формате, конвертация не нужна
+      const executableConfig = schema;
       
       // Обновляем конфигурацию бота
       botConfig.configuration = executableConfig;
@@ -719,8 +719,8 @@ class BotRuntime {
         return false;
       }
       
-      // Конвертируем схему в исполняемую логику
-      const executableSchema = this.schemaConverter.convertToExecutable(schema);
+      // Схема уже в новом формате, конвертация не нужна
+      const executableSchema = schema;
       
       // Обновляем конфигурацию бота
       const botPath = path.join(this.botsDir, userId, `${botId}.json`);

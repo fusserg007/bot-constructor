@@ -10,7 +10,7 @@ interface TriggerNodeData {
   color?: string;
 }
 
-const TriggerNode: React.FC<NodeProps<TriggerNodeData>> = ({ data, selected }) => {
+const TriggerNode: React.FC<NodeProps<TriggerNodeData>> = React.memo(({ data, selected }) => {
   return (
     <div className={`${styles.customNode} ${styles.triggerNode} ${selected ? styles.selected : ''}`}>
       <div className={styles.nodeHeader} style={{ backgroundColor: data.color || '#3b82f6' }}>
@@ -33,6 +33,16 @@ const TriggerNode: React.FC<NodeProps<TriggerNodeData>> = ({ data, selected }) =
       />
     </div>
   );
-};
+}, (prevProps, nextProps) => {
+  return (
+    prevProps.selected === nextProps.selected &&
+    prevProps.data.label === nextProps.data.label &&
+    prevProps.data.triggerType === nextProps.data.triggerType &&
+    prevProps.data.icon === nextProps.data.icon &&
+    prevProps.data.color === nextProps.data.color
+  );
+});
+
+TriggerNode.displayName = 'TriggerNode';
 
 export default TriggerNode;

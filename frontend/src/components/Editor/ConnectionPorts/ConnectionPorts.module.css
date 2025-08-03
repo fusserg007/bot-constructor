@@ -1,0 +1,268 @@
+/* Connection Ports Container */
+.connectionPorts {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  z-index: 10;
+}
+
+/* Port Indicator Base */
+.portIndicator {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  pointer-events: auto;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.portIndicator:hover {
+  transform: scale(1.2);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  z-index: 20;
+}
+
+/* Port Types */
+.portIndicator.input {
+  border-width: 3px;
+}
+
+.portIndicator.output {
+  border-width: 2px;
+}
+
+/* Port Positions */
+.portIndicator.top {
+  top: -7px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.portIndicator.bottom {
+  bottom: -7px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.portIndicator.left {
+  left: -7px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.portIndicator.right {
+  right: -7px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+/* Port Status Colors */
+.portIndicator.available {
+  background-color: #3b82f6;
+  border-color: #ffffff;
+}
+
+.portIndicator.connected {
+  background-color: #22c55e;
+  border-color: #ffffff;
+}
+
+.portIndicator.unavailable {
+  background-color: #ef4444;
+  border-color: #ffffff;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.portIndicator.error {
+  background-color: #f59e0b;
+  border-color: #ffffff;
+  animation: pulse 2s infinite;
+}
+
+/* Hover State */
+.portIndicator.hovered {
+  border-color: #ffffff !important;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+}
+
+.portIndicator.unavailable.hovered {
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.3);
+}
+
+.portIndicator.error.hovered {
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.3);
+}
+
+/* Port Icon */
+.portIcon {
+  font-size: 8px;
+  color: white;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  pointer-events: none;
+}
+
+/* Port Label */
+.portLabel {
+  position: absolute;
+  background: #1f2937;
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 500;
+  white-space: nowrap;
+  z-index: 30;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  pointer-events: none;
+}
+
+/* Label positioning based on port position */
+.portIndicator.top .portLabel {
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-bottom: 8px;
+}
+
+.portIndicator.bottom .portLabel {
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-top: 8px;
+}
+
+.portIndicator.left .portLabel {
+  right: 100%;
+  top: 50%;
+  transform: translateY(-50%);
+  margin-right: 8px;
+}
+
+.portIndicator.right .portLabel {
+  left: 100%;
+  top: 50%;
+  transform: translateY(-50%);
+  margin-left: 8px;
+}
+
+/* Connection Indicator */
+.connectionIndicator {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  background: #ffffff;
+  border-radius: 50%;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+/* Multiple Ports Layout */
+.portsGroup {
+  position: absolute;
+  display: flex;
+  gap: 4px;
+}
+
+.portsGroup.horizontal {
+  flex-direction: row;
+}
+
+.portsGroup.vertical {
+  flex-direction: column;
+}
+
+.portsGroup.top {
+  top: -7px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.portsGroup.bottom {
+  bottom: -7px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.portsGroup.left {
+  left: -7px;
+  top: 50%;
+  transform: translateY(-50%);
+  flex-direction: column;
+}
+
+.portsGroup.right {
+  right: -7px;
+  top: 50%;
+  transform: translateY(-50%);
+  flex-direction: column;
+}
+
+/* Animations */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+@keyframes connectionPulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+}
+
+.portIndicator.connecting {
+  animation: connectionPulse 1s infinite;
+}
+
+/* Data Type Specific Styles */
+.portIndicator[data-port-type="control"] {
+  border-style: solid;
+}
+
+.portIndicator[data-port-type="data"] {
+  border-style: dashed;
+}
+
+.portIndicator[data-port-type="event"] {
+  border-style: dotted;
+}
+
+.portIndicator[data-port-type="error"] {
+  border-style: double;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .portIndicator {
+    width: 16px;
+    height: 16px;
+  }
+  
+  .portLabel {
+    font-size: 10px;
+    padding: 3px 6px;
+  }
+  
+  .portIcon {
+    font-size: 9px;
+  }
+}

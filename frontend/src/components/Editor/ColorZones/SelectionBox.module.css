@@ -1,0 +1,47 @@
+.selectionHandler {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0; /* Под всеми элементами */
+}
+
+.selectionBox {
+  position: absolute;
+  border: 2px dashed #3b82f6;
+  background: rgba(59, 130, 246, 0.1);
+  pointer-events: none;
+  z-index: 1000;
+  border-radius: 4px;
+  animation: selectionPulse 1s ease-in-out infinite alternate;
+}
+
+@keyframes selectionPulse {
+  from {
+    border-color: #3b82f6;
+    background: rgba(59, 130, 246, 0.1);
+  }
+  to {
+    border-color: #2563eb;
+    background: rgba(37, 99, 235, 0.15);
+  }
+}
+
+/* Стили для различных состояний */
+.selectionBox[data-state="active"] {
+  border-style: solid;
+  animation: none;
+}
+
+.selectionBox[data-state="small"] {
+  border-style: dotted;
+  opacity: 0.7;
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+  .selectionBox {
+    border-width: 3px;
+  }
+}

@@ -181,6 +181,8 @@
 .flowContainer .react-flow__minimap {
   background: #f9fafb;
   border: 1px solid #e5e7eb;
+  width: 200px;
+  height: 150px;
 }
 
 .flowContainer .react-flow__background {

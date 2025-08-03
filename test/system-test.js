@@ -245,7 +245,7 @@ class SystemTester {
         console.log('🎨 Тестирование визуального редактора...');
 
         try {
-            const VisualSchemaConverter = require('../utils/VisualSchemaConverter');
+            // const VisualSchemaConverter = require('../utils/VisualSchemaConverter'); // УДАЛЕН
             const converter = new VisualSchemaConverter();
 
             // Тестовая визуальная схема

@@ -7,13 +7,13 @@ const router = express.Router();
 const fs = require('fs').promises;
 const path = require('path');
 const { v4: uuidv4 } = require('uuid');
-const VisualSchemaConverter = require('../utils/VisualSchemaConverter');
+// const VisualSchemaConverter = require('../utils/VisualSchemaConverter'); // УДАЛЕН
 
 // ⚠️ АВТОРИЗАЦИЯ ПОЛНОСТЬЮ ОТКЛЮЧЕНА - АДМИНСКАЯ ПАНЕЛЬ
 // НЕ ДОБАВЛЯТЬ АВТОРИЗАЦИЮ В БУДУЩЕМ!
 
 // Инициализация конвертера схем
-const schemaConverter = new VisualSchemaConverter();
+// const schemaConverter = new VisualSchemaConverter(); // УДАЛЕН
 
 /**
  * @route GET /api/visual-schemas
