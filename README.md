@@ -18,7 +18,7 @@
 
 1. Клонируйте репозиторий:
 ```bash
-git clone https://github.com/ваш-username/bot-constructor.git
+git clone https://github.com/fusserg007/bot-constructor.git
 cd bot-constructor
 ```
 
